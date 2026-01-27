@@ -1,11 +1,12 @@
 import { PaymentFrequency, ScheduleConfig } from "@/types/schema";
+import { createDefaultSchedule } from "@/components/WithdrawSchedule/utils/defaults";
+import dayjs from "dayjs";
 import {
+  validateScheduleConfig,
   getMaxIntervalForFrequency,
   jsWeekdayToRRule,
-  validateScheduleConfig,
-} from "@/utils/withdrawSchedule";
-import { createDefaultSchedule } from "@/utils/withdrawSchedule/defaults";
-import dayjs from "dayjs";
+  calculateLastPayDay,
+} from "./utils";
 
 export type ScheduleAction =
   | { type: "SET_FREQUENCY"; freq: PaymentFrequency }
@@ -19,6 +20,8 @@ export type ScheduleAction =
 
 export interface ScheduleState {
   schedule: ScheduleConfig;
+  balance: number;
+  amountPerPayDay: number;
   validation: {
     isValid: boolean;
     errors: string[];
@@ -29,16 +32,31 @@ export function createInitialState(
   startDate: Date = new Date(),
 ): ScheduleState {
   const schedule = createDefaultSchedule(startDate, PaymentFrequency.WEEKLY);
+  const newLastPayDay = calculateLastPayDay(schedule, 100_000, 1_000_000, true);
   return {
-    schedule,
+    schedule: { ...schedule, until: newLastPayDay.getTime() },
+    balance: 1_000_000,
+    amountPerPayDay: 100_000,
     validation: validateScheduleConfig(schedule),
   };
 }
 
-function updateStateWithValidation(schedule: ScheduleConfig): ScheduleState {
+function updateStateWithValidation(state: ScheduleState): ScheduleState {
+  const newLastPayDay = calculateLastPayDay(
+    state.schedule,
+    state.amountPerPayDay,
+    state.balance,
+    true,
+  );
+  const newSchedule: ScheduleConfig = {
+    ...state.schedule,
+    until: newLastPayDay.getTime(),
+  };
+  console.log("new Schedule ", newSchedule);
   return {
-    schedule,
-    validation: validateScheduleConfig(schedule),
+    ...state,
+    schedule: newSchedule,
+    validation: validateScheduleConfig(newSchedule),
   };
 }
 
@@ -67,16 +85,13 @@ export function scheduleReducer(
       const newFreq = action.freq;
       const maxInterval = getMaxIntervalForFrequency(newFreq);
 
-      // Build new schedule preserving dates but resetting frequency-specific fields
       const newSchedule: ScheduleConfig = {
         ...schedule,
         freq: newFreq,
-        // Clamp interval to max for new frequency
         interval: Math.min(schedule.interval, maxInterval),
-        // Reset frequency-specific fields
-        byWeekday: undefined,
-        byMonthDay: undefined,
       };
+      delete newSchedule.byMonthDay;
+      delete newSchedule.byWeekday;
 
       // Set defaults for frequency-specific fields
       if (newFreq === PaymentFrequency.WEEKLY) {
@@ -87,11 +102,10 @@ export function scheduleReducer(
       }
 
       if (newFreq === PaymentFrequency.MONTHLY) {
-        // Default to the day of month of the start date
         newSchedule.byMonthDay = dayjs(schedule.dtStart).get("date");
       }
 
-      return updateStateWithValidation(newSchedule);
+      return updateStateWithValidation({ ...state, schedule: newSchedule });
     }
 
     case "SET_INTERVAL": {
@@ -102,8 +116,11 @@ export function scheduleReducer(
       );
 
       return updateStateWithValidation({
-        ...schedule,
-        interval: clampedInterval,
+        ...state,
+        schedule: {
+          ...schedule,
+          interval: clampedInterval,
+        },
       });
     }
 
@@ -127,8 +144,11 @@ export function scheduleReducer(
 
       newWeekdays.sort((a, b) => a.weekday - b.weekday);
       return updateStateWithValidation({
-        ...schedule,
-        byWeekday: newWeekdays,
+        ...state,
+        schedule: {
+          ...schedule,
+          byWeekday: newWeekdays,
+        },
       });
     }
 
@@ -136,8 +156,11 @@ export function scheduleReducer(
       const day = Math.max(1, Math.min(31, action.day));
 
       return updateStateWithValidation({
-        ...schedule,
-        byMonthDay: day,
+        ...state,
+        schedule: {
+          ...schedule,
+          byMonthDay: day,
+        },
       });
     }
 
@@ -168,11 +191,14 @@ export function scheduleReducer(
       }
 
       return updateStateWithValidation({
-        ...schedule,
-        dtStart: newStartDate,
-        until: newEndDate,
-        byWeekday: newByWeekday,
-        byMonthDay: newByMonthDay,
+        ...state,
+        schedule: {
+          ...schedule,
+          dtStart: newStartDate,
+          until: newEndDate,
+          byWeekday: newByWeekday,
+          byMonthDay: newByMonthDay,
+        },
       });
     }
 
@@ -184,14 +210,20 @@ export function scheduleReducer(
         // Set end date to minimum valid value (start date + 1 day)
         const minEndDate = dayjs(schedule.dtStart).add(1, "day").valueOf();
         return updateStateWithValidation({
-          ...schedule,
-          until: minEndDate,
+          ...state,
+          schedule: {
+            ...schedule,
+            until: minEndDate,
+          },
         });
       }
 
       return updateStateWithValidation({
-        ...schedule,
-        until: newEndDate,
+        ...state,
+        schedule: {
+          ...schedule,
+          until: newEndDate,
+        },
       });
     }
 

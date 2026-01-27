@@ -93,9 +93,12 @@ export function scheduleConfigToRRule(scheduleConfig: ScheduleConfig): RRule {
   const rruleOptions: Partial<Options> = {
     freq: frequencyMap[scheduleConfig.freq],
     dtstart: new Date(scheduleConfig.dtStart),
-    until: new Date(scheduleConfig.until),
     interval: scheduleConfig.interval,
   };
+
+  if (scheduleConfig.until !== undefined) {
+    rruleOptions.until = new Date(scheduleConfig.until);
+  }
 
   // Add bymonthday for monthly schedules
   if (scheduleConfig.byMonthDay !== undefined) {
@@ -130,10 +133,47 @@ export function getMaxIntervalForFrequency(freq: PaymentFrequency): number {
     case PaymentFrequency.DAILY:
       return 7;
     case PaymentFrequency.WEEKLY:
-      return 4; 
+      return 4;
     case PaymentFrequency.MONTHLY:
       return 12;
     default:
       return 31;
   }
+}
+
+export function calculateLastPayDay(
+  scheduleConfig: ScheduleConfig,
+  payAmount: number,
+  totalAmount: number,
+  tillEnd?: boolean,
+): Date {
+  const rrule = scheduleConfigToRRule(scheduleConfig);
+  if (tillEnd) {
+    rrule.options.until = null;
+    rrule.options.count = 100;
+  }
+  const dates = rrule.all();
+  let lastPayDay = dates[dates.length - 1];
+  let amountTotal = totalAmount;
+  let paidCount = 0
+  console.log(dates.map((d) => d.toLocaleDateString()));
+  for (const date of dates) {
+    console.log("current amount:", amountTotal.toLocaleString());
+    if (amountTotal > payAmount) {
+      paidCount++;
+      console.log("subtracting paying amount:", payAmount.toLocaleString());
+      amountTotal = amountTotal - payAmount;
+      lastPayDay = date;
+      console.log("new amount:", amountTotal.toLocaleString());
+      console.log("new lastPayDay:", lastPayDay.toLocaleDateString());
+      console.log("====================================");
+      continue;
+    }
+    break;
+  }
+  console.log("====================================");
+  console.log("final amount:", amountTotal.toLocaleString());
+  console.log("final lastPayDay:", lastPayDay.toLocaleDateString());
+  console.log("final paidCount:", paidCount);
+  return lastPayDay;
 }

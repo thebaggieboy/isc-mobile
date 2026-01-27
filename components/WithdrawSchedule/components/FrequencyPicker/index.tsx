@@ -1,11 +1,11 @@
 import { DefaultColors } from "@/constants/colors";
 import { PaymentFrequency } from "@/types/schema";
-import { getMaxIntervalForFrequency } from "@/utils/withdrawSchedule";
 import { Picker } from "@react-native-picker/picker";
 import { Settings2 } from "lucide-react-native";
 import { useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { styles } from "./styles";
+import { getMaxIntervalForFrequency } from "../../utils";
 
 interface FrequencyPickerProps {
   frequency: PaymentFrequency;

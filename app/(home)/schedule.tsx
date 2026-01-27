@@ -5,17 +5,19 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Schedule() {
+  const testBalance = 1_000_000;
+  const testAmountPerPayout = 100_000;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: DefaultColors.white }}>
       <ScrollView
         contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.titles}>
           <Text style={styles.title}>Withdraw Schedule</Text>
           <Text style={styles.subtitle}>Manage your withdrawal schedule</Text>
         </View>
-        <CreateWithdrawSchedule />
-
+        <CreateWithdrawSchedule balance={testBalance} amountPerPayout={testAmountPerPayout} />
         <Button
           title="Create Schedule"
           buttonStyle={styles.createButton}

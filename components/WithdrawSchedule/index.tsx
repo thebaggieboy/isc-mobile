@@ -1,9 +1,8 @@
 import { DefaultColors } from "@/constants/colors";
 import { PaymentFrequency } from "@/types/schema";
-import { scheduleConfigToRRule } from "@/utils/withdrawSchedule";
 import { formatDateToViewable } from "@/utils/time";
 import { Calendar, AlertCircle } from "lucide-react-native";
-import { useReducer, useMemo, useCallback, useState } from "react";
+import { useReducer, useMemo, useCallback, useState, useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { styles } from "./styles";
 import DatePicker from "../DatePicker";
@@ -16,30 +15,30 @@ import {
   scheduleActions,
   ScheduleState,
 } from "./scheduleReducer";
+import { calculateLastPayDay, scheduleConfigToRRule } from "./utils";
 
 interface CreateWithdrawScheduleProps {
   onScheduleChange?: (state: ScheduleState) => void;
   initialStartDate?: Date;
+  balance: number;
+  amountPerPayout: number;
 }
 
 export default function CreateWithdrawSchedule({
   onScheduleChange,
   initialStartDate,
-}: CreateWithdrawScheduleProps = {}) {
+  balance,
+  amountPerPayout,
+}: CreateWithdrawScheduleProps) {
   const [state, dispatch] = useReducer(
     scheduleReducer,
     initialStartDate ?? new Date(),
     createInitialState,
   );
-
   const { schedule, validation } = state;
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-
-  useMemo(() => {
-    onScheduleChange?.(state);
-  }, [state, onScheduleChange]);
 
   const summary = useMemo(() => {
     if (!validation.isValid) {
@@ -163,7 +162,8 @@ export default function CreateWithdrawSchedule({
         <Text style={styles.summaryTitle}>Schedule Summary</Text>
         {summary ? (
           <Text style={styles.summaryText}>
-            {summary.charAt(0).toUpperCase() + summary.slice(1)}
+            Recieve {amountPerPayout}
+            {summary}
           </Text>
         ) : (
           <Text style={styles.summaryTextInvalid}>

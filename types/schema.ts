@@ -8,9 +8,10 @@ export interface Account {
 export interface WithdrawSchedule {
   uid: string;
   schedule: ScheduleConfig;
+  amountPerPayout: number;
   accountID: string;
   nextOccurrenceDate: number;
-  amount: number;
+  totalAmount: number;
   createdDate: number;
   status: ScheduleStatus;
 }
