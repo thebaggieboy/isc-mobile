@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import { DefaultColors } from "@/constants/colors";
 
-export default function ProfileLayout() {
+export default function PayoutLayout() {
   return (
     <Stack
       screenOptions={{
@@ -22,33 +22,14 @@ export default function ProfileLayout() {
         }}
       />
       <Stack.Screen
-        name="settings"
+        name="[id]"
         options={{
-          title: "Settings",
-          headerBackTitle: "Back",
-        }}
-      />
-      <Stack.Screen
-        name="security"
-        options={{
-          title: "Security",
-          headerBackTitle: "Back",
-        }}
-      />
-      <Stack.Screen
-        name="notifications"
-        options={{
-          title: "Notifications",
-          headerBackTitle: "Back",
-        }}
-      />
-      <Stack.Screen
-        name="help"
-        options={{
-          title: "Help & Support",
+          title: "Payout Details",
           headerBackTitle: "Back",
         }}
       />
     </Stack>
   );
 }
+
+
