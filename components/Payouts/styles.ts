@@ -11,7 +11,7 @@ export const styles = StyleSheet.create({
     backgroundColor: DefaultColors.black,
     borderRadius: 24,
     padding: 24,
-    margin: 16,
+    margin: 5,
   },
 
   // Header Styles

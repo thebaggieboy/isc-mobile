@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   HomeView: {
-    padding: 20,
+    padding: 5,
     gap: 18,
     paddingBottom: 40,
   },

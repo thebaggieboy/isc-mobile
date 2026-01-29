@@ -145,8 +145,8 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 14,
+    fontWeight: "500",
     color: DefaultColors.black,
   },
   amountSection: {

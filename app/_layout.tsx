@@ -1,50 +1,47 @@
-import { Slot, Stack, Tabs } from "expo-router";
-import { House, PiggyBank, Banknote, User } from "lucide-react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+// app/_layout.tsx
+import { Stack, useRouter } from "expo-router";
+import { DefaultColors } from "@/constants/colors";
+import { useEffect, useState } from "react";
+import PreloaderScreen from "@/components/PreloaderScreen";
 
 export default function RootLayout() {
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Simulate initial loading and auth check
+    const initializeApp = async () => {
+      try {
+        // Wait for preloader animation
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (error) {
+        console.error('Init error:', error);
+      } finally {
+        setIsLoading(false);
+        // Redirect to onboarding only once after preloader
+        setTimeout(() => router.replace('/(auth)/onboarding'), 100);
+      }
+    };
+
+    initializeApp();
+  }, []);
+
+  if (isLoading) {
+    return <PreloaderScreen />;
+  }
+
   return (
-    <Tabs>
-      <Tabs.Screen
-        name="(home)"
-        options={{
-          headerShown: false,
-          title: "Home",
-          tabBarIcon: ({ color, size, focused }) => (
-            <House color={focused ? color : "#ccc"} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="(deposit)"
-        options={{
-          headerShown: false,
-          title: "Add",
-          tabBarIcon: ({ color, size, focused }) => (
-            <PiggyBank color={focused ? color : "#ccc"} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="(payout)"
-        options={{
-          headerShown: false,
-          title: "Payouts",
-          tabBarIcon: ({ color, size, focused }) => (
-            <Banknote color={focused ? color : "#ccc"} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="(profile)"
-        options={{
-          headerShown: false,
-          title: "Profile",
-          tabBarIcon: ({ color, size, focused }) => (
-            <User color={focused ? color : "#ccc"} size={size} />
-          ),
-        }}
-      />
-    </Tabs>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: {
+          backgroundColor: DefaultColors.background,
+        },
+        animation: "fade",
+      }}
+    >
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
+    </Stack>
   );
 }
