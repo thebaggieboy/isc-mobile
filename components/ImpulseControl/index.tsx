@@ -126,8 +126,8 @@ export default function ImpulseControl({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: DefaultColors.black,
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 0,
+    padding: 40,
     gap: 20,
   },
   header: {

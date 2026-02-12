@@ -211,7 +211,7 @@ export default function Payout({
             <TouchableOpacity 
               key={payout.id}
               style={styles.payoutCard}
-              onPress={() => router.push(`/payout/${payout.id}`)}
+              onPress={() => router.push(`/(payout)/${payout.id}/`)}
               activeOpacity={0.7}
             >
               <View style={styles.payoutCardLeft}>

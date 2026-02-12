@@ -4,8 +4,8 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
   BalanceView: {
     backgroundColor: DefaultColors.black,
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 0,
+    padding: 40,
     height: 220,
     justifyContent: "space-between",
   },
@@ -17,12 +17,12 @@ export const styles = StyleSheet.create({
   greeting: {
     color: DefaultColors.white,
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "800",
     marginBottom: 4,
   },
   label: {
     color: "#888",
-    fontSize: 13,
+    fontSize: 14,
   },
   eyeButton: {
     padding: 4,
@@ -35,15 +35,15 @@ export const styles = StyleSheet.create({
   },
   currency: {
     color: "#888",
-    fontSize: 24,
+    fontSize: 36,
     fontWeight: "600",
     marginTop: 8, 
     marginRight: 4,
   },
   BalanceAmount: {
-    fontSize: 42,
+    fontSize: 36,
     color: DefaultColors.white,
-    fontWeight: "700",
+    fontWeight: "500",
     letterSpacing: -1,
   },
   Actions: {

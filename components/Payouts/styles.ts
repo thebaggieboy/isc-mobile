@@ -9,9 +9,9 @@ export const styles = StyleSheet.create({
   
   payoutView: {
     backgroundColor: DefaultColors.black,
-    borderRadius: 24,
-    padding: 24,
-    margin: 5,
+    borderRadius: 0,
+    padding: 40,
+    margin: 0,
   },
 
   // Header Styles

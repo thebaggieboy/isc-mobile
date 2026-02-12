@@ -165,12 +165,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
+    padding: 0,
   },
   statusCard: {
     backgroundColor: DefaultColors.black,
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 0,
+    padding: 20,
     alignItems: "center",
     marginBottom: 20,
   },

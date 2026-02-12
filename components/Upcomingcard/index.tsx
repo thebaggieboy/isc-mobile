@@ -156,8 +156,8 @@ export default function UpcomingCard({ schedules, payouts }: UpcomingCardProps) 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: DefaultColors.black,
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 0,
+    padding: 40,
   },
   section: {
     marginBottom: 4,
