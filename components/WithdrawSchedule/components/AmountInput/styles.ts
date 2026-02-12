@@ -3,37 +3,39 @@ import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: 12,
   },
-  sectionHeader: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  sectionTitle: {
+  title: {
     fontWeight: "600",
     color: DefaultColors.white,
     opacity: 0.7,
   },
-  picker: {
-    width: 100,
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#1B1B1B",
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "#333333",
-    color: DefaultColors.white,
-    borderRadius: 12,
-    height: 44,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
   },
-  pickerItem: {
-    color: DefaultColors.white,
-    padding: 20,
+  currencySymbol: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#DC2626",
   },
-  warningText: {
-    fontSize: 12,
-    color: "#FFA500",
-    marginTop: 4,
-    fontStyle: "italic",
+  input: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "500",
+    color: DefaultColors.white,
+    padding: 0,
   },
 });

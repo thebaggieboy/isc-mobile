@@ -15,10 +15,12 @@ export type ScheduleAction =
   | { type: "SET_MONTH_DAY"; day: number }
   | { type: "SET_START_DATE"; date: number }
   | { type: "SET_END_DATE"; date: number }
+  | { type: "SET_AMOUNT"; amount: number }
   | { type: "RESET"; startDate?: Date };
 
 export interface ScheduleState {
   schedule: ScheduleConfig;
+  amount: number;
   validation: {
     isValid: boolean;
     errors: string[];
@@ -31,13 +33,18 @@ export function createInitialState(
   const schedule = createDefaultSchedule(startDate, PaymentFrequency.WEEKLY);
   return {
     schedule,
+    amount: 0,
     validation: validateScheduleConfig(schedule),
   };
 }
 
-function updateStateWithValidation(schedule: ScheduleConfig): ScheduleState {
+function updateStateWithValidation(
+  schedule: ScheduleConfig,
+  amount: number,
+): ScheduleState {
   return {
     schedule,
+    amount,
     validation: validateScheduleConfig(schedule),
   };
 }
@@ -60,7 +67,7 @@ export function scheduleReducer(
   state: ScheduleState,
   action: ScheduleAction,
 ): ScheduleState {
-  const { schedule } = state;
+  const { schedule, amount } = state;
 
   switch (action.type) {
     case "SET_FREQUENCY": {
@@ -91,7 +98,7 @@ export function scheduleReducer(
         newSchedule.byMonthDay = dayjs(schedule.dtStart).get("date");
       }
 
-      return updateStateWithValidation(newSchedule);
+      return updateStateWithValidation(newSchedule, amount);
     }
 
     case "SET_INTERVAL": {
@@ -101,10 +108,13 @@ export function scheduleReducer(
         Math.min(action.interval, maxInterval),
       );
 
-      return updateStateWithValidation({
-        ...schedule,
-        interval: clampedInterval,
-      });
+      return updateStateWithValidation(
+        {
+          ...schedule,
+          interval: clampedInterval,
+        },
+        amount,
+      );
     }
 
     case "TOGGLE_WEEKDAY": {
@@ -126,19 +136,25 @@ export function scheduleReducer(
       }
 
       newWeekdays.sort((a, b) => a.weekday - b.weekday);
-      return updateStateWithValidation({
-        ...schedule,
-        byWeekday: newWeekdays,
-      });
+      return updateStateWithValidation(
+        {
+          ...schedule,
+          byWeekday: newWeekdays,
+        },
+        amount,
+      );
     }
 
     case "SET_MONTH_DAY": {
       const day = Math.max(1, Math.min(31, action.day));
 
-      return updateStateWithValidation({
-        ...schedule,
-        byMonthDay: day,
-      });
+      return updateStateWithValidation(
+        {
+          ...schedule,
+          byMonthDay: day,
+        },
+        amount,
+      );
     }
 
     case "SET_START_DATE": {
@@ -167,13 +183,16 @@ export function scheduleReducer(
         newByMonthDay = dayjs(newStartDate).get("date");
       }
 
-      return updateStateWithValidation({
-        ...schedule,
-        dtStart: newStartDate,
-        until: newEndDate,
-        byWeekday: newByWeekday,
-        byMonthDay: newByMonthDay,
-      });
+      return updateStateWithValidation(
+        {
+          ...schedule,
+          dtStart: newStartDate,
+          until: newEndDate,
+          byWeekday: newByWeekday,
+          byMonthDay: newByMonthDay,
+        },
+        amount,
+      );
     }
 
     case "SET_END_DATE": {
@@ -183,16 +202,29 @@ export function scheduleReducer(
       if (newEndDate <= schedule.dtStart) {
         // Set end date to minimum valid value (start date + 1 day)
         const minEndDate = dayjs(schedule.dtStart).add(1, "day").valueOf();
-        return updateStateWithValidation({
-          ...schedule,
-          until: minEndDate,
-        });
+        return updateStateWithValidation(
+          {
+            ...schedule,
+            until: minEndDate,
+          },
+          amount,
+        );
       }
 
-      return updateStateWithValidation({
-        ...schedule,
-        until: newEndDate,
-      });
+      return updateStateWithValidation(
+        {
+          ...schedule,
+          until: newEndDate,
+        },
+        amount,
+      );
+    }
+
+    case "SET_AMOUNT": {
+      return {
+        ...state,
+        amount: Math.max(0, action.amount),
+      };
     }
 
     case "RESET": {
@@ -233,6 +265,11 @@ export const scheduleActions = {
   setEndDate: (date: number): ScheduleAction => ({
     type: "SET_END_DATE",
     date,
+  }),
+
+  setAmount: (amount: number): ScheduleAction => ({
+    type: "SET_AMOUNT",
+    amount,
   }),
 
   reset: (startDate?: Date): ScheduleAction => ({

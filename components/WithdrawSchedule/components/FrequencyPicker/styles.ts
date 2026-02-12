@@ -12,7 +12,8 @@ export const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontWeight: "600",
-    color: DefaultColors.gray,
+    color: DefaultColors.white,
+    opacity: 0.7,
   },
   inputGroupWrapper: {
     marginTop: 8,
@@ -21,7 +22,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#F5F5F7",
+    backgroundColor: "#1B1B1B",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -30,12 +31,12 @@ export const styles = StyleSheet.create({
   stepperContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: DefaultColors.white,
+    backgroundColor: "#111111",
     borderRadius: 8,
     padding: 4,
     gap: 8,
     borderWidth: 1,
-    borderColor: "#E5E5E7",
+    borderColor: "#333333",
   },
   stepperButton: {
     width: 32,
@@ -43,16 +44,16 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 6,
-    backgroundColor: "#F5F5F7",
+    backgroundColor: "#1B1B1B",
   },
   stepperButtonDisabled: {
-    backgroundColor: "#EBEBEB",
+    backgroundColor: "#0A0A0A",
     opacity: 0.5,
   },
   stepperButtonText: {
     fontSize: 18,
     fontWeight: "500",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
     lineHeight: 22,
   },
   stepperButtonTextDisabled: {
@@ -61,7 +62,7 @@ export const styles = StyleSheet.create({
   stepperValue: {
     fontSize: 16,
     fontWeight: "600",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
     minWidth: 20,
     textAlign: "center",
   },
@@ -71,13 +72,13 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
   },
   freqPicker: {
-    backgroundColor: DefaultColors.white,
+    backgroundColor: "#111111",
     borderWidth: 1,
-    borderColor: "#E5E5E7",
+    borderColor: "#333333",
     borderRadius: 10,
-    color: DefaultColors.black,
+    color: DefaultColors.white,
   },
   pickerItem: {
-    color: DefaultColors.black,
+    color: DefaultColors.white,
   },
 });

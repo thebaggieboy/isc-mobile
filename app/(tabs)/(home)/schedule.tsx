@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Schedule() {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: DefaultColors.white }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#111111" }}>
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}>
@@ -37,17 +37,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "800",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
   },
   subtitle: {
     fontSize: 16,
     fontWeight: "400",
-    color: DefaultColors.gray,
+    color: DefaultColors.white,
+    opacity: 0.7,
     marginTop: 4,
   },
   createButton: {
     marginTop: 30,
-    backgroundColor: DefaultColors.black,
+    backgroundColor: "#DC2626",
     paddingVertical: 18,
     borderRadius: 16,
   },

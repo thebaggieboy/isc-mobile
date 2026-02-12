@@ -1,21 +1,23 @@
 import { DefaultColors } from "@/constants/colors";
 import { PaymentFrequency } from "@/types/schema";
-import { scheduleConfigToRRule } from "@/utils/withdrawSchedule";
+import { formatMoney } from "@/utils/amount";
 import { formatDateToViewable } from "@/utils/time";
-import { Calendar, AlertCircle } from "lucide-react-native";
-import { useReducer, useMemo, useCallback, useState } from "react";
+import { scheduleConfigToRRule } from "@/utils/withdrawSchedule";
+import { AlertCircle, Calendar } from "lucide-react-native";
+import { useCallback, useMemo, useReducer, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { styles } from "./styles";
 import DatePicker from "../DatePicker";
+import AmountInput from "./components/AmountInput";
 import FrequencyPicker from "./components/FrequencyPicker";
-import WeekdayPicker from "./components/WeekdayPicker";
 import MonthDayPicker from "./components/MonthDayPicker";
+import WeekdayPicker from "./components/WeekdayPicker";
 import {
-  scheduleReducer,
   createInitialState,
   scheduleActions,
+  scheduleReducer,
   ScheduleState,
 } from "./scheduleReducer";
+import { styles } from "./styles";
 
 interface CreateWithdrawScheduleProps {
   onScheduleChange?: (state: ScheduleState) => void;
@@ -32,7 +34,7 @@ export default function CreateWithdrawSchedule({
     createInitialState,
   );
 
-  const { schedule, validation } = state;
+  const { schedule, amount, validation } = state;
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -65,6 +67,10 @@ export default function CreateWithdrawSchedule({
     dispatch(scheduleActions.setMonthDay(day));
   }, []);
 
+  const handleAmountChange = useCallback((newAmount: number) => {
+    dispatch(scheduleActions.setAmount(newAmount));
+  }, []);
+
   const handleStartDateChange = useCallback((date: number) => {
     dispatch(scheduleActions.setStartDate(date));
     setShowStartDatePicker(false);
@@ -77,6 +83,11 @@ export default function CreateWithdrawSchedule({
 
   return (
     <View style={styles.container}>
+      <AmountInput
+        amount={amount}
+        onAmountChange={handleAmountChange}
+      />
+
       <FrequencyPicker
         frequency={schedule.freq}
         interval={schedule.interval}
@@ -101,13 +112,15 @@ export default function CreateWithdrawSchedule({
 
       <View style={styles.sectionRow}>
         <View style={styles.sectionHeader}>
-          <Calendar size={16} color={DefaultColors.gray} />
+          <Calendar
+            size={16}
+            color={DefaultColors.white}
+          />
           <Text style={styles.sectionTitle}>Starts</Text>
         </View>
         <Pressable
           style={styles.selectDateButton}
-          onPress={() => setShowStartDatePicker(true)}
-        >
+          onPress={() => setShowStartDatePicker(true)}>
           <Text style={styles.dateButtonText}>
             {formatDateToViewable(new Date(schedule.dtStart))}
           </Text>
@@ -122,13 +135,15 @@ export default function CreateWithdrawSchedule({
 
       <View style={styles.sectionRow}>
         <View style={styles.sectionHeader}>
-          <Calendar size={16} color={DefaultColors.gray} />
+          <Calendar
+            size={16}
+            color={DefaultColors.white}
+          />
           <Text style={styles.sectionTitle}>Ends</Text>
         </View>
         <Pressable
           style={styles.selectDateButton}
-          onPress={() => setShowEndDatePicker(true)}
-        >
+          onPress={() => setShowEndDatePicker(true)}>
           <Text style={styles.dateButtonText}>
             {formatDateToViewable(new Date(schedule.until))}
           </Text>
@@ -143,10 +158,15 @@ export default function CreateWithdrawSchedule({
 
       {!validation.isValid && (
         <View style={styles.errorContainer}>
-          <AlertCircle size={16} color="#DC2626" />
+          <AlertCircle
+            size={16}
+            color="#DC2626"
+          />
           <View style={styles.errorList}>
             {validation.errors.map((error, index) => (
-              <Text key={index} style={styles.errorText}>
+              <Text
+                key={index}
+                style={styles.errorText}>
                 {error}
               </Text>
             ))}
@@ -158,13 +178,19 @@ export default function CreateWithdrawSchedule({
         style={[
           styles.summaryCard,
           !validation.isValid && styles.summaryCardInvalid,
-        ]}
-      >
+        ]}>
         <Text style={styles.summaryTitle}>Schedule Summary</Text>
         {summary ? (
-          <Text style={styles.summaryText}>
-            {summary.charAt(0).toUpperCase() + summary.slice(1)}
-          </Text>
+          <>
+            <Text style={styles.summaryText}>
+              {summary.charAt(0).toUpperCase() + summary.slice(1)}
+            </Text>
+            {amount > 0 && (
+              <Text style={styles.summaryAmount}>
+                ₦{formatMoney(amount)} per payout
+              </Text>
+            )}
+          </>
         ) : (
           <Text style={styles.summaryTextInvalid}>
             Please fix the errors above to see the schedule summary

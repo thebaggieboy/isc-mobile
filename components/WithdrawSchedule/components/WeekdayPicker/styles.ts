@@ -12,7 +12,8 @@ export const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontWeight: "600",
-    color: DefaultColors.gray,
+    color: DefaultColors.white,
+    opacity: 0.7,
   },
   weekdayList: {
     flexDirection: "row",
@@ -24,20 +25,22 @@ export const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 5,
     flex: 1,
-    backgroundColor: "#F5F5F7",
+    backgroundColor: "#1B1B1B",
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#333333",
   },
   weekdayChipActive: {
-    backgroundColor: DefaultColors.black,
-    borderColor: DefaultColors.black,
+    backgroundColor: "#DC2626",
+    borderColor: "#DC2626",
   },
   weekdayChipDisabled: {
     opacity: 0.6,
   },
   weekdayChipText: {
     fontWeight: "600",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
     fontSize: 13,
   },
   weekdayChipTextActive: {
@@ -46,7 +49,8 @@ export const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 12,
-    color: DefaultColors.gray,
+    color: DefaultColors.white,
+    opacity: 0.6,
     marginTop: 4,
     fontStyle: "italic",
   },
