@@ -1,17 +1,15 @@
-// app/(auth)/login.tsx
+// app/(auth)/forgot-password.tsx
 import { useRouter } from "expo-router";
 import { DefaultColors } from "@/constants/colors";
-import {
-  Lock,
+import { 
   Mail,
-  Eye,
-  EyeOff,
-  ArrowLeft
+  ArrowLeft,
+  Lock
 } from "lucide-react-native";
-import {
-  View,
-  Text,
-  StyleSheet,
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
   TouchableOpacity,
   TextInput,
   StatusBar,
@@ -24,70 +22,63 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import { api } from "@/services/api";
 
-export default function LoginScreen() {
+export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
-  const validateForm = () => {
+  const validateEmail = () => {
     if (!email.trim()) {
       Alert.alert("Validation Error", "Please enter your email");
       return false;
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert("Validation Error", "Please enter a valid email address");
       return false;
     }
 
-    if (!password) {
-      Alert.alert("Validation Error", "Please enter your password");
-      return false;
-    }
-
     return true;
   };
 
-  const handleLogin = async () => {
-    if (!validateForm()) {
+  const handleResetPassword = async () => {
+    if (!validateEmail()) {
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await api.login({
-        email: email.trim().toLowerCase(),
-        password,
-      });
-
-      // Success! Navigate to home
-      router.replace("/(tabs)/(home)");
+      await api.forgotPassword(email.trim().toLowerCase());
+      setEmailSent(true);
+      Alert.alert(
+        "Check Your Email",
+        "If an account exists with this email, you'll receive password reset instructions.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ]
+      );
     } catch (error: any) {
       Alert.alert(
-        "Login Failed",
-        error.message || "Invalid email or password. Please try again."
+        "Error",
+        error.message || "Failed to send reset email. Please try again."
       );
     } finally {
       setLoading(false);
-      router.replace("/(tabs)/(home)");
     }
-  };
-
-  const handleForgotPassword = () => {
-    router.push("/(auth)/forgot-password");
   };
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar barStyle="light-content" />
-
+      
       {/* Back Button */}
-      <TouchableOpacity
+      <TouchableOpacity 
         style={styles.backButton}
         onPress={() => router.back()}
         disabled={loading}
@@ -95,7 +86,7 @@ export default function LoginScreen() {
         <ArrowLeft size={24} color={DefaultColors.white} />
       </TouchableOpacity>
 
-      <KeyboardAvoidingView
+      <KeyboardAvoidingView 
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
@@ -105,9 +96,9 @@ export default function LoginScreen() {
             <View style={styles.iconContainer}>
               <Lock size={32} color="#ff4444" />
             </View>
-            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.title}>Forgot Password?</Text>
             <Text style={styles.subtitle}>
-              Log in to continue managing your savings
+              Enter your email and we'll send you instructions to reset your password
             </Text>
           </View>
 
@@ -127,70 +118,35 @@ export default function LoginScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
-                  editable={!loading}
+                  editable={!loading && !emailSent}
                 />
               </View>
             </View>
 
-            {/* Password Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.inputContainer}>
-                <Lock size={20} color="#888" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your password"
-                  placeholderTextColor="#888"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  autoComplete="password"
-                  editable={!loading}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  disabled={loading}
-                >
-                  {showPassword ? (
-                    <EyeOff size={20} color="#888" />
-                  ) : (
-                    <Eye size={20} color="#888" />
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Forgot Password */}
+            {/* Reset Button */}
             <TouchableOpacity
-              style={styles.forgotPassword}
-              onPress={handleForgotPassword}
-              disabled={loading}
-            >
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            {/* Login Button */}
-            <TouchableOpacity
-              style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-              onPress={handleLogin}
+              style={[styles.resetButton, (loading || emailSent) && styles.resetButtonDisabled]}
+              onPress={handleResetPassword}
               activeOpacity={0.8}
-              disabled={loading}
+              disabled={loading || emailSent}
             >
               {loading ? (
                 <ActivityIndicator color={DefaultColors.white} />
               ) : (
-                <Text style={styles.loginButtonText}>Log In</Text>
+                <Text style={styles.resetButtonText}>
+                  {emailSent ? "Email Sent" : "Send Reset Link"}
+                </Text>
               )}
             </TouchableOpacity>
 
-            {/* Sign Up Link */}
-            <View style={styles.signupContainer}>
-              <Text style={styles.signupText}>Don't have an account? </Text>
-              <TouchableOpacity
-                onPress={() => router.push("/(auth)/signup")}
+            {/* Back to Login */}
+            <View style={styles.loginContainer}>
+              <Text style={styles.loginText}>Remember your password? </Text>
+              <TouchableOpacity 
+                onPress={() => router.back()}
                 disabled={loading}
               >
-                <Text style={styles.signupLink}>Sign Up</Text>
+                <Text style={styles.loginLink}>Log In</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -239,8 +195,10 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#AAA",
+    color: "#888",
     textAlign: "center",
+    paddingHorizontal: 16,
+    lineHeight: 22,
   },
   form: {
     gap: 24,
@@ -256,13 +214,13 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1A1A1A",
+    backgroundColor: DefaultColors.black,
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#222",
   },
   input: {
     flex: 1,
@@ -270,15 +228,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: DefaultColors.white,
   },
-  forgotPassword: {
-    alignSelf: "flex-end",
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#ff4444",
-  },
-  loginButton: {
+  resetButton: {
     backgroundColor: "#ff4444",
     height: 56,
     borderRadius: 16,
@@ -291,25 +241,25 @@ const styles = StyleSheet.create({
     elevation: 8,
     marginTop: 8,
   },
-  loginButtonDisabled: {
+  resetButtonDisabled: {
     opacity: 0.6,
   },
-  loginButtonText: {
+  resetButtonText: {
     fontSize: 16,
     fontWeight: "700",
     color: DefaultColors.white,
   },
-  signupContainer: {
+  loginContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
   },
-  signupText: {
+  loginText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#AAA",
+    color: "#888",
   },
-  signupLink: {
+  loginLink: {
     fontSize: 14,
     fontWeight: "700",
     color: "#ff4444",

@@ -1,15 +1,15 @@
 import { useRouter } from "expo-router";
 import { DefaultColors } from "@/constants/colors";
-import { 
+import {
   Shield,
   Lock,
   TrendingUp,
   Target
 } from "lucide-react-native";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   TouchableOpacity,
   Dimensions,
   StatusBar
@@ -32,7 +32,7 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar barStyle="light-content" />
-      
+
       <View style={styles.content}>
         {/* Hero Section */}
         <View style={styles.heroSection}>
@@ -57,14 +57,14 @@ export default function OnboardingScreen() {
               </View>
               <Text style={styles.featureText}>Lock Funds</Text>
             </View>
-            
+
             <View style={styles.featureItem}>
               <View style={styles.featureIcon}>
                 <TrendingUp size={20} color="#ff4444" />
               </View>
               <Text style={styles.featureText}>Track Progress</Text>
             </View>
-            
+
             <View style={styles.featureItem}>
               <View style={styles.featureIcon}>
                 <Target size={20} color="#ff4444" />
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   featureText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#888",
+    color: "#AAA",
   },
   valueSection: {
     alignItems: "center",
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   valueDescription: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#888",
+    color: "#AAA",
     textAlign: "center",
     lineHeight: 22,
   },
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#222",
+    borderColor: "#333",
   },
   loginButtonText: {
     fontSize: 16,
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   termsText: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#888",
+    color: "#AAA",
     textAlign: "center",
     lineHeight: 18,
     marginTop: 8,

@@ -1,9 +1,10 @@
 import Button from "@/components/Button";
 import { DefaultColors } from "@/constants/colors";
+import { PAYSTACK_PUBLIC_KEY } from "@/constants/paystack";
 import { formatMoney, parseMoney } from "@/utils/amount";
 import { useRouter } from "expo-router";
-import { ChevronLeft, CreditCard, Landmark } from "lucide-react-native";
-import { useState } from "react";
+import { ArrowLeft, CreditCard } from "lucide-react-native";
+import { useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -13,113 +14,178 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+// import { Paystack, paystackProps } from "react-native-paystack-webview";
 
 const QUICK_AMOUNTS = [1000, 5000, 10000, 20000];
+const MIN_DEPOSIT = 100; // Minimum deposit in Naira
 
 export default function Deposit() {
   const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSetAmount = (val: number) => {
     setAmount(val.toString());
   };
 
-  const amountParsed = parseMoney(amount);
+  const numericAmount = parseInt(amount.replace(/[^0-9]/g, "")) || 0;
+
+  const handleDeposit = () => {
+    if (numericAmount < MIN_DEPOSIT) {
+      Alert.alert(
+        "Invalid Amount",
+        `Minimum deposit amount is ₦${MIN_DEPOSIT.toLocaleString()}`
+      );
+      return;
+    }
+
+    // Show payment instructions (temporary until Paystack WebView is configured)
+    Alert.alert(
+      "Payment Information",
+      `To deposit ₦${formatMoney(numericAmount)}:\n\n` +
+      `1. Use the Paystack public key from settings\n` +
+      `2. Test Card: 4084084084084081\n` +
+      `3. CVV: 408, PIN: 0000, OTP: 123456\n\n` +
+      `Note: Paystack WebView integration coming soon!`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Simulate Success",
+          onPress: () => {
+            Alert.alert(
+              "Payment Successful! 🎉",
+              `Your account has been credited with ₦${formatMoney(numericAmount)}`,
+              [{ text: "Done", onPress: () => router.back() }]
+            );
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => router.back()}
-              style={styles.backButton}>
-              <ChevronLeft
-                color={DefaultColors.black}
-                size={28}
+              style={styles.backButton}
+              disabled={loading}>
+              <ArrowLeft
+                color={DefaultColors.white}
+                size={24}
               />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Deposit</Text>
-            <View style={{ width: 28 }} />
+            <Text style={styles.headerTitle}>Add Funds</Text>
+            <View style={{ width: 24 }} />
           </View>
 
+          {/* Amount Section */}
           <View style={styles.amountSection}>
-            <Text style={styles.label}>Enter Amount</Text>
+            <Text style={styles.label}>Amount</Text>
             <View style={styles.inputWrapper}>
               <Text style={styles.currencyPrefix}>₦</Text>
               <TextInput
                 style={styles.input}
-                value={amountParsed}
+                value={amount ? formatMoney(numericAmount) : ""}
                 onChangeText={setAmount}
-                placeholder="0.00"
+                placeholder="0"
                 keyboardType="numeric"
-                placeholderTextColor="#999"
+                placeholderTextColor="#555"
+                editable={!loading}
               />
             </View>
 
+            {/* Quick Select */}
             <View style={styles.quickSelectContainer}>
               {QUICK_AMOUNTS.map((val) => (
                 <TouchableOpacity
                   key={val}
                   style={styles.quickAmountBtn}
-                  onPress={() => handleSetAmount(val)}>
+                  onPress={() => handleSetAmount(val)}
+                  disabled={loading}>
                   <Text style={styles.quickAmountText}>
-                    + ₦{val.toLocaleString()}
+                    ₦{val.toLocaleString()}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Payment Method</Text>
-
-            <TouchableOpacity style={styles.methodCard}>
-              <View style={styles.methodIconWrapper}>
-                <Landmark
-                  color={DefaultColors.black}
-                  size={20}
-                />
-              </View>
-              <View style={styles.methodInfo}>
-                <Text style={styles.methodName}>Bank Transfer</Text>
-                <Text style={styles.methodDesc}>
-                  Instant deposit via bank app
-                </Text>
-              </View>
-              <View style={styles.radioActive} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.methodCard}>
-              <View style={styles.methodIconWrapper}>
-                <CreditCard
-                  color={DefaultColors.black}
-                  size={20}
-                />
-              </View>
-              <View style={styles.methodInfo}>
-                <Text style={styles.methodName}>Debit Card</Text>
-                <Text style={styles.methodDesc}>
-                  Pay using Master/Visa card
-                </Text>
-              </View>
-              <View style={styles.radioInactive} />
-            </TouchableOpacity>
+          {/* Payment Info */}
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <CreditCard size={20} color="#ff4444" />
+              <Text style={styles.infoText}>
+                Secure payment via Paystack
+              </Text>
+            </View>
+            <Text style={styles.infoSubtext}>
+              Pay with debit card, bank transfer, or USSD
+            </Text>
           </View>
+
+          {/* Payment Summary */}
+          {numericAmount > 0 && (
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryTitle}>Payment Summary</Text>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Amount</Text>
+                <Text style={styles.summaryValue}>
+                  ₦{formatMoney(numericAmount)}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Fee</Text>
+                <Text style={styles.summaryValue}>₦0.00</Text>
+              </View>
+              <View style={[styles.summaryRow, styles.summaryTotal]}>
+                <Text style={styles.summaryTotalLabel}>Total</Text>
+                <Text style={styles.summaryTotalValue}>
+                  ₦{formatMoney(numericAmount)}
+                </Text>
+              </View>
+            </View>
+          )}
         </ScrollView>
 
+        {/* Footer Button */}
         <View style={styles.footer}>
           <Button
-            title="Continue"
-            onPress={() => console.log("Depositing", amount)}
-            buttonStyle={styles.depositBtn}
+            title={loading ? "Processing..." : "Continue to Payment"}
+            onPress={handleDeposit}
+            buttonStyle={[
+              styles.depositBtn,
+              (numericAmount < MIN_DEPOSIT || loading) && styles.depositBtnDisabled,
+            ]}
+            disabled={numericAmount < MIN_DEPOSIT || loading}
           />
         </View>
       </KeyboardAvoidingView>
+
+      {/* Paystack WebView */}
+      {/* Paystack WebView removed until package is fixed */
+      /* <Paystack
+        paystackKey={PAYSTACK_PUBLIC_KEY}
+        billingEmail="user@example.com"
+        amount={numericAmount}
+        onCancel={handlePaymentCancel}
+        onSuccess={handlePaymentSuccess}
+        ref={paystackWebViewRef}
+        currency="NGN"
+        channels={["card", "bank", "ussd", "bank_transfer"]}
+        activityIndicatorColor="#ff4444"
+      /> */}
     </SafeAreaView>
   );
 }
@@ -127,19 +193,20 @@ export default function Deposit() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DefaultColors.white,
+    backgroundColor: "#111111",
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    padding: 24,
+    paddingBottom: 100,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 30,
+    marginBottom: 32,
   },
   backButton: {
     padding: 4,
@@ -147,117 +214,143 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
   },
   amountSection: {
-    marginBottom: 40,
+    marginBottom: 32,
   },
   label: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 10,
+    fontSize: 15,
+    color: "#888",
+    marginBottom: 12,
     fontWeight: "500",
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: DefaultColors.black,
-    paddingVertical: 10,
+    backgroundColor: "#1A1A1A",
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderWidth: 1,
+    borderColor: "#2A2A2A",
   },
   currencyPrefix: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "700",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
     marginRight: 8,
   },
   input: {
     flex: 1,
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "700",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
   },
   quickSelectContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
-    marginTop: 20,
+    marginTop: 16,
   },
   quickAmountBtn: {
-    backgroundColor: "#F5F5F5",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    backgroundColor: "#1A1A1A",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#EEE",
+    borderColor: "#2A2A2A",
   },
   quickAmountText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "600",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
   },
-  section: {
-    marginBottom: 30,
+  infoCard: {
+    backgroundColor: "#1A1A1A",
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#2A2A2A",
+    marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: DefaultColors.black,
-    marginBottom: 15,
-  },
-  methodCard: {
+  infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: DefaultColors.white,
+    gap: 12,
+    marginBottom: 8,
+  },
+  infoText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: DefaultColors.white,
+  },
+  infoSubtext: {
+    fontSize: 13,
+    color: "#888",
+    marginLeft: 32,
+  },
+  summaryCard: {
+    backgroundColor: "#1A1A1A",
+    borderRadius: 16,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "#EEE",
-    padding: 16,
-    borderRadius: 12,
+    borderColor: "#2A2A2A",
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: DefaultColors.white,
+    marginBottom: 16,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
-  methodIconWrapper: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  methodInfo: {
-    flex: 1,
-  },
-  methodName: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: DefaultColors.black,
-  },
-  methodDesc: {
-    fontSize: 12,
+  summaryLabel: {
+    fontSize: 14,
     color: "#888",
-    marginTop: 2,
   },
-  radioActive: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 6,
-    borderColor: DefaultColors.black,
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: DefaultColors.white,
   },
-  radioInactive: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#DDD",
+  summaryTotal: {
+    borderTopWidth: 1,
+    borderTopColor: "#2A2A2A",
+    paddingTop: 12,
+    marginTop: 4,
+    marginBottom: 0,
+  },
+  summaryTotalLabel: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: DefaultColors.white,
+  },
+  summaryTotalValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#ff4444",
   },
   footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 20,
+    backgroundColor: "#111111",
     borderTopWidth: 1,
-    borderTopColor: "#EEE",
+    borderTopColor: "#2A2A2A",
   },
   depositBtn: {
     height: 56,
     borderRadius: 16,
+    backgroundColor: "#ff4444",
+  },
+  depositBtnDisabled: {
+    opacity: 0.5,
   },
 });

@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: DefaultColors.black,
     borderRadius: 0,
-    padding: 40,
+    padding: 20,
   },
   section: {
     marginBottom: 4,

@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: DefaultColors.black,
     borderRadius: 0,
-    padding: 40,
+    padding: 20,
     gap: 20,
   },
   header: {

@@ -8,6 +8,7 @@ import { useCallback, useMemo, useReducer, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import DatePicker from "../DatePicker";
 import AmountInput from "./components/AmountInput";
+import PayoutAmountInput from "./components/PayoutAmountInput";
 import FrequencyPicker from "./components/FrequencyPicker";
 import MonthDayPicker from "./components/MonthDayPicker";
 import WeekdayPicker from "./components/WeekdayPicker";
@@ -34,7 +35,7 @@ export default function CreateWithdrawSchedule({
     createInitialState,
   );
 
-  const { schedule, amount, validation } = state;
+  const { schedule, amount, payoutAmount, validation } = state;
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -71,6 +72,10 @@ export default function CreateWithdrawSchedule({
     dispatch(scheduleActions.setAmount(newAmount));
   }, []);
 
+  const handlePayoutAmountChange = useCallback((newAmount: number) => {
+    dispatch(scheduleActions.setPayoutAmount(newAmount));
+  }, []);
+
   const handleStartDateChange = useCallback((date: number) => {
     dispatch(scheduleActions.setStartDate(date));
     setShowStartDatePicker(false);
@@ -86,6 +91,11 @@ export default function CreateWithdrawSchedule({
       <AmountInput
         amount={amount}
         onAmountChange={handleAmountChange}
+      />
+
+      <PayoutAmountInput
+        amount={payoutAmount}
+        onAmountChange={handlePayoutAmountChange}
       />
 
       <FrequencyPicker
@@ -187,7 +197,12 @@ export default function CreateWithdrawSchedule({
             </Text>
             {amount > 0 && (
               <Text style={styles.summaryAmount}>
-                ₦{formatMoney(amount)} per payout
+                ₦{formatMoney(amount)} to lock
+              </Text>
+            )}
+            {payoutAmount > 0 && (
+              <Text style={styles.summaryAmount}>
+                ₦{formatMoney(payoutAmount)} per payout
               </Text>
             )}
           </>

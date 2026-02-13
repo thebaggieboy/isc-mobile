@@ -1,7 +1,7 @@
 // app/(auth)/signup.tsx
 import { useRouter } from "expo-router";
 import { DefaultColors } from "@/constants/colors";
-import { 
+import {
   User,
   Mail,
   Lock,
@@ -10,17 +10,20 @@ import {
   ArrowLeft,
   Phone
 } from "lucide-react-native";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   TouchableOpacity,
   TextInput,
   StatusBar,
-  ScrollView
+  ScrollView,
+  Alert,
+  ActivityIndicator
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
+import { api } from "@/services/api";
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -31,32 +34,94 @@ export default function SignupScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const validateForm = () => {
+    if (!name.trim()) {
+      Alert.alert("Validation Error", "Please enter your full name");
+      return false;
+    }
+
+    if (!email.trim()) {
+      Alert.alert("Validation Error", "Please enter your email");
+      return false;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert("Validation Error", "Please enter a valid email address");
+      return false;
+    }
+
+    if (!phone.trim()) {
+      Alert.alert("Validation Error", "Please enter your phone number");
+      return false;
+    }
+
+    if (!password) {
+      Alert.alert("Validation Error", "Please enter a password");
+      return false;
+    }
+
+    if (password.length < 8) {
+      Alert.alert("Validation Error", "Password must be at least 8 characters long");
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Validation Error", "Passwords do not match");
+      return false;
+    }
+
+    return true;
+  };
 
   const handleSignup = async () => {
-    // Skip authentication for now - go straight to tabs (which contains home)
-    router.replace("/(tabs)/(home)");
-    
-    // Later, add authentication here:
-    // const response = await api.signup(name, email, password);
-    // await AsyncStorage.setItem('authToken', response.token);
-    // router.replace("/(tabs)/(home)");
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await api.signup({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        password,
+      });
+
+      // Success! Navigate to home immediately
+      router.replace("/(tabs)/(home)");
+    } catch (error: any) {
+      Alert.alert(
+        "Signup Failed",
+        error.message || "An error occurred during signup. Please try again."
+      );
+    } finally {
+      setLoading(false);
+      router.replace("/(tabs)/(home)");
+    }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar barStyle="light-content" />
-      
+
       {/* Back Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.backButton}
         onPress={() => router.back()}
+        disabled={loading}
       >
         <ArrowLeft size={24} color={DefaultColors.white} />
       </TouchableOpacity>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
           {/* Header */}
@@ -84,6 +149,7 @@ export default function SignupScreen() {
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
+                  editable={!loading}
                 />
               </View>
             </View>
@@ -101,6 +167,7 @@ export default function SignupScreen() {
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  editable={!loading}
                 />
               </View>
             </View>
@@ -117,6 +184,7 @@ export default function SignupScreen() {
                   value={phone}
                   onChangeText={setPhone}
                   keyboardType="phone-pad"
+                  editable={!loading}
                 />
               </View>
             </View>
@@ -133,8 +201,12 @@ export default function SignupScreen() {
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
+                  editable={!loading}
                 />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  disabled={loading}
+                >
                   {showPassword ? (
                     <EyeOff size={20} color="#888" />
                   ) : (
@@ -142,6 +214,7 @@ export default function SignupScreen() {
                   )}
                 </TouchableOpacity>
               </View>
+              <Text style={styles.hint}>Must be at least 8 characters</Text>
             </View>
 
             {/* Confirm Password Input */}
@@ -156,8 +229,12 @@ export default function SignupScreen() {
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!showConfirmPassword}
+                  editable={!loading}
                 />
-                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  disabled={loading}
+                >
                   {showConfirmPassword ? (
                     <EyeOff size={20} color="#888" />
                   ) : (
@@ -177,17 +254,25 @@ export default function SignupScreen() {
 
             {/* Signup Button */}
             <TouchableOpacity
-              style={styles.signupButton}
+              style={[styles.signupButton, loading && styles.signupButtonDisabled]}
               onPress={handleSignup}
               activeOpacity={0.8}
+              disabled={loading}
             >
-              <Text style={styles.signupButtonText}>Create Account</Text>
+              {loading ? (
+                <ActivityIndicator color={DefaultColors.white} />
+              ) : (
+                <Text style={styles.signupButtonText}>Create Account</Text>
+              )}
             </TouchableOpacity>
 
             {/* Login Link */}
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+              <TouchableOpacity
+                onPress={() => router.push("/(auth)/login")}
+                disabled={loading}
+              >
                 <Text style={styles.loginLink}>Log In</Text>
               </TouchableOpacity>
             </View>
@@ -237,7 +322,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#888",
+    color: "#AAA",
     textAlign: "center",
   },
   form: {
@@ -254,13 +339,13 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: DefaultColors.black,
+    backgroundColor: "#1A1A1A",
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: "#222",
+    borderColor: "#333",
   },
   input: {
     flex: 1,
@@ -268,10 +353,16 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: DefaultColors.white,
   },
-  termsText: {
+  hint: {
     fontSize: 12,
     fontWeight: "500",
     color: "#888",
+    marginLeft: 4,
+  },
+  termsText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#AAA",
     textAlign: "center",
     lineHeight: 18,
     marginTop: 4,
@@ -293,6 +384,9 @@ const styles = StyleSheet.create({
     elevation: 8,
     marginTop: 8,
   },
+  signupButtonDisabled: {
+    opacity: 0.6,
+  },
   signupButtonText: {
     fontSize: 16,
     fontWeight: "700",
@@ -307,7 +401,7 @@ const styles = StyleSheet.create({
   loginText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#888",
+    color: "#AAA",
   },
   loginLink: {
     fontSize: 14,

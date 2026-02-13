@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
   payoutView: {
     backgroundColor: DefaultColors.black,
     borderRadius: 0,
-    padding: 40,
+    padding: 20,
     margin: 0,
   },
 
@@ -44,14 +44,14 @@ export const styles = StyleSheet.create({
   summaryContainer: {
     flexDirection: "row",
     gap: 12,
-    marginBottom: 28,
+    marginBottom: 24,
   },
 
   summaryCard: {
     flex: 1,
     backgroundColor: "#1a1a1a",
     borderRadius: 16,
-    padding: 16,
+    padding: 10,
   },
 
   highlightCard: {

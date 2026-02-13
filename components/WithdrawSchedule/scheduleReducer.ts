@@ -16,11 +16,13 @@ export type ScheduleAction =
   | { type: "SET_START_DATE"; date: number }
   | { type: "SET_END_DATE"; date: number }
   | { type: "SET_AMOUNT"; amount: number }
+  | { type: "SET_PAYOUT_AMOUNT"; amount: number }
   | { type: "RESET"; startDate?: Date };
 
 export interface ScheduleState {
   schedule: ScheduleConfig;
   amount: number;
+  payoutAmount: number;
   validation: {
     isValid: boolean;
     errors: string[];
@@ -34,6 +36,7 @@ export function createInitialState(
   return {
     schedule,
     amount: 0,
+    payoutAmount: 0,
     validation: validateScheduleConfig(schedule),
   };
 }
@@ -41,10 +44,12 @@ export function createInitialState(
 function updateStateWithValidation(
   schedule: ScheduleConfig,
   amount: number,
+  payoutAmount: number,
 ): ScheduleState {
   return {
     schedule,
     amount,
+    payoutAmount,
     validation: validateScheduleConfig(schedule),
   };
 }
@@ -67,7 +72,7 @@ export function scheduleReducer(
   state: ScheduleState,
   action: ScheduleAction,
 ): ScheduleState {
-  const { schedule, amount } = state;
+  const { schedule, amount, payoutAmount } = state;
 
   switch (action.type) {
     case "SET_FREQUENCY": {
@@ -98,7 +103,7 @@ export function scheduleReducer(
         newSchedule.byMonthDay = dayjs(schedule.dtStart).get("date");
       }
 
-      return updateStateWithValidation(newSchedule, amount);
+      return updateStateWithValidation(newSchedule, amount, payoutAmount);
     }
 
     case "SET_INTERVAL": {
@@ -114,6 +119,7 @@ export function scheduleReducer(
           interval: clampedInterval,
         },
         amount,
+        payoutAmount,
       );
     }
 
@@ -142,6 +148,7 @@ export function scheduleReducer(
           byWeekday: newWeekdays,
         },
         amount,
+        payoutAmount,
       );
     }
 
@@ -154,6 +161,7 @@ export function scheduleReducer(
           byMonthDay: day,
         },
         amount,
+        payoutAmount,
       );
     }
 
@@ -192,6 +200,7 @@ export function scheduleReducer(
           byMonthDay: newByMonthDay,
         },
         amount,
+        payoutAmount,
       );
     }
 
@@ -208,6 +217,7 @@ export function scheduleReducer(
             until: minEndDate,
           },
           amount,
+          payoutAmount,
         );
       }
 
@@ -217,6 +227,7 @@ export function scheduleReducer(
           until: newEndDate,
         },
         amount,
+        payoutAmount,
       );
     }
 
@@ -224,6 +235,13 @@ export function scheduleReducer(
       return {
         ...state,
         amount: Math.max(0, action.amount),
+      };
+    }
+
+    case "SET_PAYOUT_AMOUNT": {
+      return {
+        ...state,
+        payoutAmount: Math.max(0, action.amount),
       };
     }
 
@@ -269,6 +287,11 @@ export const scheduleActions = {
 
   setAmount: (amount: number): ScheduleAction => ({
     type: "SET_AMOUNT",
+    amount,
+  }),
+
+  setPayoutAmount: (amount: number): ScheduleAction => ({
+    type: "SET_PAYOUT_AMOUNT",
     amount,
   }),
 

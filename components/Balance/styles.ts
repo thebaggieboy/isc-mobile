@@ -5,7 +5,7 @@ export const styles = StyleSheet.create({
   BalanceView: {
     backgroundColor: DefaultColors.black,
     borderRadius: 0,
-    padding: 40,
+    padding: 20,
     height: 220,
     justifyContent: "space-between",
   },

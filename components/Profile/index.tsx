@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { DefaultColors } from "@/constants/colors";
-import { 
+import {
   User,
   Settings,
   Shield,
@@ -12,10 +12,10 @@ import {
   Phone,
   Edit
 } from "lucide-react-native";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   ScrollView,
   TouchableOpacity,
   Image
@@ -26,19 +26,24 @@ interface ProfileProps {
   userEmail: string;
   userPhone?: string;
   userAvatar?: string;
+  onLogout?: () => void;
 }
 
-export default function Profile({ 
-  userName, 
-  userEmail, 
+export default function Profile({
+  userName,
+  userEmail,
   userPhone,
-  userAvatar
+  userAvatar,
+  onLogout
 }: ProfileProps) {
   const router = useRouter();
 
   const handleLogout = () => {
-    // Handle logout logic
-    console.log("Logging out...");
+    if (onLogout) {
+      onLogout();
+    } else {
+      console.log("Logging out...");
+    }
   };
 
   const menuItems = [
@@ -81,7 +86,7 @@ export default function Profile({
                 <User size={40} color={DefaultColors.white} />
               </View>
             )}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.editButton}
               onPress={() => router.push("/edit-profile")}
             >
@@ -90,7 +95,7 @@ export default function Profile({
           </View>
 
           <Text style={styles.userName}>{userName}</Text>
-          
+
           <View style={styles.contactInfo}>
             <View style={styles.contactItem}>
               <Mail size={14} color="#888" />
@@ -128,7 +133,7 @@ export default function Profile({
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.logoutButton}
           onPress={handleLogout}
         >
@@ -146,10 +151,10 @@ export default function Profile({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DefaultColors.background,
+    backgroundColor: DefaultColors.black,
   },
   profileView: {
-    padding: 20,
+    padding: 0,
   },
   profileHeader: {
     backgroundColor: DefaultColors.black,
