@@ -1,49 +1,38 @@
 import { useRouter } from "expo-router";
 import { DefaultColors } from "@/constants/colors";
-import { 
+import {
   Calendar,
   TrendingUp,
   ArrowRight,
   Clock,
   Lock
 } from "lucide-react-native";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity
 } from "react-native";
 import { formatMoney } from "@/utils/amount";
 
-interface ScheduleItem {
-  id: string;
-  title: string;
-  date: Date;
-  amount: number;
-}
-
-interface PayoutItem {
-  id: string;
-  interval: string;
-  unlockDate: Date;
-  amount: number;
-}
+import { PayoutItem, Schedule } from "@/services/api/schedule.service";
 
 interface UpcomingCardProps {
-  schedules: ScheduleItem[];
+  schedules: Schedule[];
   payouts: PayoutItem[];
 }
 
 export default function UpcomingCard({ schedules, payouts }: UpcomingCardProps) {
   const router = useRouter();
 
-  const getRelativeDate = (date: Date) => {
+  const getRelativeDate = (dateString: string | Date) => {
+    const date = new Date(dateString);
     const today = new Date();
     const diff = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diff === 0) return "Today";
     if (diff === 1) return "Tomorrow";
-    if (diff < 7) return `${diff} days`;
+    if (diff < 7 && diff > 0) return `${diff} days`;
     return date.toLocaleDateString();
   };
 
@@ -56,9 +45,9 @@ export default function UpcomingCard({ schedules, payouts }: UpcomingCardProps) 
             <Calendar size={18} color={DefaultColors.white} />
             <Text style={styles.sectionTitle}>Upcoming Schedules</Text>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.viewAllButton}
-            onPress={() => router.push("/schedule")}
+            onPress={() => router.push("/(tabs)/(home)/schedule")}
           >
             <Text style={styles.viewAllText}>View All</Text>
             <ArrowRight size={16} color="#888" />
@@ -67,8 +56,8 @@ export default function UpcomingCard({ schedules, payouts }: UpcomingCardProps) 
 
         <View style={styles.itemsContainer}>
           {schedules.length > 0 ? (
-            schedules.slice(0, 2).map((schedule) => (
-              <TouchableOpacity 
+            schedules.map((schedule) => (
+              <TouchableOpacity
                 key={schedule.id}
                 style={styles.item}
                 onPress={() => router.push(`/schedule/${schedule.id}`)}
@@ -80,12 +69,15 @@ export default function UpcomingCard({ schedules, payouts }: UpcomingCardProps) 
                   <View style={styles.itemInfo}>
                     <Text style={styles.itemTitle}>{schedule.title}</Text>
                     <Text style={styles.itemDate}>
-                      {getRelativeDate(schedule.date)}
+                      Payout: ₦{formatMoney(schedule.payoutAmount)}
+                    </Text>
+                    <Text style={styles.itemDate}>
+                      Due: {getRelativeDate(schedule.scheduledDate)}
                     </Text>
                   </View>
                 </View>
                 <Text style={styles.itemAmount}>
-                  ₦{formatMoney(schedule.amount)}
+                  ₦{formatMoney(schedule.payoutAmount)}
                 </Text>
               </TouchableOpacity>
             ))
@@ -108,9 +100,9 @@ export default function UpcomingCard({ schedules, payouts }: UpcomingCardProps) 
             <TrendingUp size={18} color={DefaultColors.white} />
             <Text style={styles.sectionTitle}>Upcoming Payouts</Text>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.viewAllButton}
-            onPress={() => router.push("/payout")}
+            onPress={() => router.push("/(tabs)/(payout)")}
           >
             <Text style={styles.viewAllText}>View All</Text>
             <ArrowRight size={16} color="#888" />
@@ -120,10 +112,10 @@ export default function UpcomingCard({ schedules, payouts }: UpcomingCardProps) 
         <View style={styles.itemsContainer}>
           {payouts.length > 0 ? (
             payouts.slice(0, 2).map((payout) => (
-              <TouchableOpacity 
+              <TouchableOpacity
                 key={payout.id}
                 style={styles.item}
-                onPress={() => router.push(`/payout/${payout.id}`)}
+                onPress={() => router.push(`/(tabs)/(payout)/${payout.id}`)}
               >
                 <View style={styles.itemLeft}>
                   <View style={styles.itemIconContainer}>

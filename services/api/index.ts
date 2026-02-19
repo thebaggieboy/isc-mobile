@@ -1,7 +1,7 @@
 // services/api.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
- 
-const API_URL = 'http://localhost:3000/api/v1'; // Change to your actual API URL
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 interface SignupData {
   name: string;
@@ -34,7 +34,7 @@ interface AuthResponse {
 
 class ApiService {
 
-  private async getAuthHeader() {
+  private async getAuthHeader(): Promise<Record<string, string>> {
     const token = await AsyncStorage.getItem('accessToken');
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
@@ -60,11 +60,11 @@ class ApiService {
       }
 
       const result = await response.json();
-      
+
       // Store tokens
       await AsyncStorage.setItem('accessToken', result.data.tokens.accessToken);
       await AsyncStorage.setItem('refreshToken', result.data.tokens.refreshToken);
-      
+
       return result;
     } catch (error) {
       console.error('Signup error:', error);
@@ -88,11 +88,11 @@ class ApiService {
       }
 
       const result = await response.json();
-      
+
       // Store tokens
       await AsyncStorage.setItem('accessToken', result.data.tokens.accessToken);
       await AsyncStorage.setItem('refreshToken', result.data.tokens.refreshToken);
-      
+
       return result;
     } catch (error) {
       console.error('Login error:', error);
@@ -163,6 +163,53 @@ class ApiService {
       return await response.json();
     } catch (error) {
       console.error('Get profile error:', error);
+      throw error;
+    }
+  }
+
+  async post(endpoint: string, data: any) {
+    try {
+      const headers = await this.getAuthHeader();
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Request failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`POST ${endpoint} error:`, error);
+      throw error;
+    }
+  }
+
+  async get(endpoint: string) {
+    try {
+      const headers = await this.getAuthHeader();
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Request failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`GET ${endpoint} error:`, error);
       throw error;
     }
   }

@@ -6,7 +6,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: DefaultColors.background,
   },
-  
+
   payoutView: {
     backgroundColor: DefaultColors.black,
     borderRadius: 0,
@@ -236,6 +236,23 @@ export const styles = StyleSheet.create({
   },
 
   secondaryActionText: {
+    color: DefaultColors.white,
+  },
+
+  withdrawButton: {
+    flex: 1,
+    backgroundColor: DefaultColors.primary,
+    height: 48,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+
+  withdrawButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
     color: DefaultColors.white,
   },
 

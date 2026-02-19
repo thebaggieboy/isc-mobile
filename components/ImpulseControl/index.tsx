@@ -1,17 +1,17 @@
 import { useRouter } from "expo-router";
 import { DefaultColors } from "@/constants/colors";
-import { 
+import {
   Shield,
   TrendingUp,
   Flame,
   Target,
   Award
 } from "lucide-react-native";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity
 } from "react-native";
 import { formatMoney } from "@/utils/amount";
 
@@ -22,7 +22,7 @@ interface ImpulseControlProps {
   savingsGoal: number;
 }
 
-export default function ImpulseControl({ 
+export default function ImpulseControl({
   savedThisMonth,
   impulsesStopped,
   currentStreak,
@@ -30,7 +30,9 @@ export default function ImpulseControl({
 }: ImpulseControlProps) {
   const router = useRouter();
 
-  const progressPercentage = Math.min((savedThisMonth / savingsGoal) * 100, 100);
+  const progressPercentage = savingsGoal > 0
+    ? Math.min((savedThisMonth / savingsGoal) * 100, 100)
+    : 0;
 
   return (
     <View style={styles.container}>
@@ -57,11 +59,11 @@ export default function ImpulseControl({
         </View>
         <View style={styles.progressBarContainer}>
           <View style={styles.progressBarBackground}>
-            <View 
+            <View
               style={[
-                styles.progressBarFill, 
+                styles.progressBarFill,
                 { width: `${progressPercentage}%` }
-              ]} 
+              ]}
             />
           </View>
           <Text style={styles.progressPercentage}>
@@ -104,7 +106,7 @@ export default function ImpulseControl({
 
       {/* Achievement Badge */}
       {currentStreak >= 7 && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.achievementBanner}
           onPress={() => router.push("/achievements")}
         >

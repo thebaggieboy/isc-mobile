@@ -29,6 +29,12 @@ export default function ProfileLayout() {
         }}
       />
       <Stack.Screen
+        name="banks"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="security"
         options={{
           title: "Security",

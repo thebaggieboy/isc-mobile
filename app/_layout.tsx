@@ -4,6 +4,8 @@ import { DefaultColors } from "@/constants/colors";
 import { useEffect, useState } from "react";
 import PreloaderScreen from "@/components/PreloaderScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from 'react-native-toast-message';
+import { PaystackProvider } from 'react-native-paystack-webview';
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);
@@ -52,17 +54,20 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: {
-          backgroundColor: DefaultColors.background,
-        },
-        animation: "fade",
-      }}
-    >
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <PaystackProvider publicKey={process.env.EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_your_key_here'}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: {
+            backgroundColor: DefaultColors.background,
+          },
+          animation: "fade",
+        }}
+      >
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+      <Toast />
+    </PaystackProvider>
   );
 }

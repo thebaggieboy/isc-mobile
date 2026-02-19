@@ -2,8 +2,8 @@ import Button from "@/components/Button";
 import { DefaultColors } from "@/constants/colors";
 import { formatMoney, parseMoney } from "@/utils/amount";
 import { useRouter } from "expo-router";
-import { ChevronLeft, CreditCard, Landmark } from "lucide-react-native";
-import { useState } from "react";
+import { ChevronLeft, CreditCard, Landmark, Loader2 } from "lucide-react-native";
+import { useState, useEffect } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -13,17 +13,120 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
+  ActivityIndicator
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePaystack } from 'react-native-paystack-webview';
+import { userService, UserProfile } from "@/services/api/user.service";
+import { api } from "@/services/api";
 
 const QUICK_AMOUNTS = [1000, 5000, 10000, 20000];
 
 export default function Deposit() {
   const [amount, setAmount] = useState("");
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { popup } = usePaystack();
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  const fetchUser = async () => {
+    try {
+      const userData = await userService.getCurrentUser();
+      setUser(userData);
+    } catch (e) {
+      console.error("Failed to fetch user", e);
+    }
+  };
 
   const handleSetAmount = (val: number) => {
     setAmount(val.toString());
+  };
+
+  const handleDeposit = async () => {
+    const numAmount = Number(amount);
+
+    // Validation
+    if (!amount || isNaN(numAmount) || numAmount <= 0) {
+      Alert.alert("Invalid Amount", "Please enter a valid deposit amount.");
+      return;
+    }
+
+    if (numAmount < 1000) {
+      Alert.alert("Minimum Deposit", "The minimum deposit amount is ₦1,000.");
+      return;
+    }
+
+    if (!user) {
+      Alert.alert("Error", "Unable to load your account. Please try again.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 1. Create pending transaction on backend to get reference
+      const depositResult = await api.post('/transactions/deposit', {
+        amount: numAmount,
+      });
+
+      const reference = depositResult.data?.reference || depositResult.reference;
+
+      if (!reference) {
+        Alert.alert("Error", "Failed to initiate deposit. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(false);
+
+      // 2. Open Paystack WebView with the reference
+      popup.checkout({
+        email: user.email,
+        amount: numAmount,
+        reference: reference,
+        activityIndicatorColor: DefaultColors.primary,
+        onCancel: () => {
+          Alert.alert("Cancelled", "Deposit was cancelled.");
+        },
+        onSuccess: (res: any) => handlePaystackSuccess(reference),
+        onError: (err: any) => {
+          console.error("Paystack error:", err);
+          Alert.alert("Payment Error", "Something went wrong with the payment. Please try again.");
+        },
+      });
+    } catch (error: any) {
+      setLoading(false);
+      Alert.alert("Error", error.message || "Failed to initiate deposit. Please try again.");
+      console.error("Deposit initiation error:", error);
+    }
+  };
+
+  const handlePaystackSuccess = async (reference: string) => {
+    try {
+      setLoading(true);
+
+      // 3. Verify transaction with backend — this credits the user's balance
+      await api.post('/transactions/verify', {
+        reference: reference,
+      });
+
+      Alert.alert("Success", "Deposit successful! Your balance has been updated.", [
+        { text: "OK", onPress: () => router.push("/(tabs)/(home)") }
+      ]);
+    } catch (error: any) {
+      Alert.alert(
+        "Verification Failed",
+        "Payment was successful but verification failed. Please contact support with reference: " + reference
+      );
+      console.error("Verification error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const amountParsed = parseMoney(amount);
@@ -33,18 +136,19 @@ export default function Deposit() {
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}>
+
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => router.back()}
               style={styles.backButton}>
               <ChevronLeft
-                color={DefaultColors.black}
-                size={28}
+                color={DefaultColors.white}
+                size={24}
               />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Deposit</Text>
-            <View style={{ width: 28 }} />
+            <View style={{ width: 40 }} />
           </View>
 
           <View style={styles.amountSection}>
@@ -57,7 +161,7 @@ export default function Deposit() {
                 onChangeText={setAmount}
                 placeholder="0.00"
                 keyboardType="numeric"
-                placeholderTextColor="#999"
+                placeholderTextColor="#666"
               />
             </View>
 
@@ -80,44 +184,36 @@ export default function Deposit() {
 
             <TouchableOpacity style={styles.methodCard}>
               <View style={styles.methodIconWrapper}>
-                <Landmark
-                  color={DefaultColors.black}
+                <CreditCard
+                  color={DefaultColors.white}
                   size={20}
                 />
               </View>
               <View style={styles.methodInfo}>
-                <Text style={styles.methodName}>Bank Transfer</Text>
+                <Text style={styles.methodName}>Pay with Paystack</Text>
                 <Text style={styles.methodDesc}>
-                  Instant deposit via bank app
+                  Card, Bank Transfer, USSD
                 </Text>
               </View>
               <View style={styles.radioActive} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.methodCard}>
-              <View style={styles.methodIconWrapper}>
-                <CreditCard
-                  color={DefaultColors.black}
-                  size={20}
-                />
-              </View>
-              <View style={styles.methodInfo}>
-                <Text style={styles.methodName}>Debit Card</Text>
-                <Text style={styles.methodDesc}>
-                  Pay using Master/Visa card
-                </Text>
-              </View>
-              <View style={styles.radioInactive} />
             </TouchableOpacity>
           </View>
         </ScrollView>
 
         <View style={styles.footer}>
-          <Button
-            title="Continue"
-            onPress={() => console.log("Depositing", amount)}
-            buttonStyle={styles.depositBtn}
-          />
+          {loading ? (
+            <View style={styles.loadingBtn}>
+              <ActivityIndicator color={DefaultColors.white} />
+              <Text style={styles.loadingBtnText}>Processing...</Text>
+            </View>
+          ) : (
+            <Button
+              title="Continue"
+              onPress={handleDeposit}
+              disabled={loading}
+              buttonStyle={styles.depositBtn}
+            />
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -127,7 +223,7 @@ export default function Deposit() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DefaultColors.white,
+    backgroundColor: DefaultColors.black,
   },
   keyboardView: {
     flex: 1,
@@ -142,40 +238,42 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   backButton: {
-    padding: 4,
+    padding: 8,
+    backgroundColor: '#222',
+    borderRadius: 12,
   },
   headerTitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DefaultColors.black,
+    fontSize: 16,
+    fontWeight: "600",
+    color: DefaultColors.white,
   },
   amountSection: {
     marginBottom: 40,
   },
   label: {
     fontSize: 14,
-    color: "#666",
+    color: "#888",
     marginBottom: 10,
     fontWeight: "500",
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: DefaultColors.black,
+    borderBottomWidth: 1,
+    borderBottomColor: "#333",
     paddingVertical: 10,
   },
   currencyPrefix: {
     fontSize: 32,
     fontWeight: "700",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
     marginRight: 8,
   },
   input: {
     flex: 1,
     fontSize: 32,
     fontWeight: "700",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
   },
   quickSelectContainer: {
     flexDirection: "row",
@@ -184,17 +282,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   quickAmountBtn: {
-    backgroundColor: "#F5F5F5",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: "#1a1a1a",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#EEE",
+    borderColor: "#333",
   },
   quickAmountText: {
     fontSize: 13,
     fontWeight: "600",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
   },
   section: {
     marginBottom: 30,
@@ -202,24 +300,24 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
     marginBottom: 15,
   },
   methodCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: DefaultColors.white,
+    backgroundColor: "#1a1a1a",
     borderWidth: 1,
-    borderColor: "#EEE",
+    borderColor: "#333",
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 12,
   },
   methodIconWrapper: {
     width: 40,
     height: 40,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 20,
+    backgroundColor: "#222",
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
@@ -230,7 +328,7 @@ const styles = StyleSheet.create({
   methodName: {
     fontSize: 15,
     fontWeight: "600",
-    color: DefaultColors.black,
+    color: DefaultColors.white,
   },
   methodDesc: {
     fontSize: 12,
@@ -241,23 +339,39 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    borderWidth: 6,
-    borderColor: DefaultColors.black,
+    borderWidth: 5,
+    borderColor: DefaultColors.primary || "#ff4444",
+    backgroundColor: DefaultColors.white,
   },
   radioInactive: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: "#DDD",
+    borderColor: "#444",
   },
   footer: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: "#EEE",
+    borderTopColor: "#222",
   },
   depositBtn: {
     height: 56,
     borderRadius: 16,
+    backgroundColor: DefaultColors.primary || "#ff4444",
+  },
+  loadingBtn: {
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: DefaultColors.primary || "#ff4444",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  loadingBtnText: {
+    color: DefaultColors.white,
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

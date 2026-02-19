@@ -1,63 +1,56 @@
 import { useRouter } from "expo-router";
 import { styles } from "./styles";
 import { DefaultColors } from "@/constants/colors";
-import { 
-  Lock, 
-  Unlock, 
-  Calendar, 
+import {
+  Lock,
+  Unlock,
+  Calendar,
   TrendingUp,
   Clock,
   CheckCircle,
   AlertCircle,
-  Search
+  Search,
+  ArrowUpRight
 } from "lucide-react-native";
 import { useState } from "react";
-import { 
-  Text, 
-  TouchableOpacity, 
-  View, 
+import {
+  Text,
+  TouchableOpacity,
+  View,
   ScrollView,
   RefreshControl,
-  TextInput 
+  TextInput
 } from "react-native";
 import { formatMoney } from "@/utils/amount";
 
-interface PayoutItem {
-  id: string;
-  amount: number;
-  lockDate: Date;
-  unlockDate: Date;
-  status: "locked" | "unlocked" | "pending";
-  interval: string;
-}
+import { PayoutItem } from "@/services/api/schedule.service";
 
 interface PayoutProps {
   totalLocked: number;
   upcomingPayout: number;
-  payoutDate: Date;
+  payoutDate: Date | null;
   payouts: PayoutItem[];
   userName: string;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
-export default function Payout({ 
-  totalLocked, 
-  upcomingPayout, 
+export default function Payout({
+  totalLocked,
+  upcomingPayout,
   payoutDate,
   payouts,
-  userName 
+  userName,
+  onRefresh,
+  refreshing = false
 }: PayoutProps) {
   const router = useRouter();
   const [showAmounts, setShowAmounts] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "locked" | "unlocked" | "pending">("all");
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1500);
-  };
-
   const getDaysUntilPayout = () => {
+    if (!payoutDate) return 0;
     const today = new Date();
     const diff = payoutDate.getTime() - today.getTime();
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -68,32 +61,36 @@ export default function Payout({
       case "locked":
         return <Lock size={16} color="#888" />;
       case "unlocked":
-        return <CheckCircle size={16} color={DefaultColors.white} />;
+        return <CheckCircle size={16} color="#4CAF50" />;
       case "pending":
-        return <Clock size={16} color="#888" />;
+        return <Clock size={16} color="#FFC107" />;
       default:
         return <AlertCircle size={16} color="#888" />;
     }
   };
 
   const getTotalStats = () => {
-    const locked = payouts.filter(p => p.status === "locked").reduce((sum, p) => sum + p.amount, 0);
+    const totalAmount = payouts.reduce((sum, p) => sum + p.amount, 0);
     const count = payouts.length;
     const lockedCount = payouts.filter(p => p.status === "locked").length;
-    return { locked, count, lockedCount };
+    return { totalAmount, count, lockedCount };
   };
 
   const filteredPayouts = payouts
     .filter(p => filterStatus === "all" || p.status === filterStatus)
-    .filter(p => searchQuery === "" || p.interval.toLowerCase().includes(searchQuery.toLowerCase()));
+    .filter(p => searchQuery === "" || (p.title || p.interval).toLowerCase().includes(searchQuery.toLowerCase()));
 
   const stats = getTotalStats();
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={DefaultColors.primary}
+        />
       }
       showsVerticalScrollIndicator={false}
     >
@@ -103,7 +100,7 @@ export default function Payout({
           <View>
             <Text style={styles.greeting}>Your Payouts</Text>
             <Text style={styles.subtitle}>
-              {stats.count} total • {stats.lockedCount} locked
+              Manage your withdrawal schedules
             </Text>
           </View>
           <TouchableOpacity
@@ -123,12 +120,12 @@ export default function Payout({
           <View style={styles.summaryCard}>
             <View style={styles.cardHeader}>
               <Lock size={16} color="#888" />
-              <Text style={styles.cardLabel}>Total Locked</Text>
+              <Text style={styles.cardLabel}>Total Amount</Text>
             </View>
             <View style={styles.cardAmount}>
               <Text style={styles.currency}>₦</Text>
               <Text style={styles.amount}>
-                {showAmounts ? formatMoney(totalLocked) : "****"}
+                {showAmounts ? formatMoney(stats.totalAmount) : "****"}
               </Text>
             </View>
           </View>
@@ -144,13 +141,26 @@ export default function Payout({
                 {showAmounts ? formatMoney(upcomingPayout) : "****"}
               </Text>
             </View>
-            <View style={styles.countdownContainer}>
-              <Calendar size={12} color="#888" />
-              <Text style={styles.countdownText}>
-                in {getDaysUntilPayout()} days
-              </Text>
-            </View>
+            {upcomingPayout > 0 && (
+              <View style={styles.countdownContainer}>
+                <Calendar size={12} color="#888" />
+                <Text style={styles.countdownText}>
+                  in {getDaysUntilPayout()} days
+                </Text>
+              </View>
+            )}
           </View>
+        </View>
+
+        {/* Quick Actions - Withdrawal */}
+        <View style={styles.quickActions}>
+          <TouchableOpacity
+            style={styles.withdrawButton}
+            onPress={() => router.push("/(tabs)/(payout)/withdraw")}
+          >
+            <ArrowUpRight size={20} color={DefaultColors.white} />
+            <Text style={styles.withdrawButtonText}>Withdraw Funds</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
@@ -167,38 +177,17 @@ export default function Payout({
 
         {/* Filter Chips */}
         <View style={styles.filterChips}>
-          <TouchableOpacity
-            style={[styles.filterChip, filterStatus === "all" && styles.filterChipActive]}
-            onPress={() => setFilterStatus("all")}
-          >
-            <Text style={[styles.filterChipText, filterStatus === "all" && styles.filterChipTextActive]}>
-              All
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterChip, filterStatus === "locked" && styles.filterChipActive]}
-            onPress={() => setFilterStatus("locked")}
-          >
-            <Text style={[styles.filterChipText, filterStatus === "locked" && styles.filterChipTextActive]}>
-              Locked
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterChip, filterStatus === "pending" && styles.filterChipActive]}
-            onPress={() => setFilterStatus("pending")}
-          >
-            <Text style={[styles.filterChipText, filterStatus === "pending" && styles.filterChipTextActive]}>
-              Pending
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterChip, filterStatus === "unlocked" && styles.filterChipActive]}
-            onPress={() => setFilterStatus("unlocked")}
-          >
-            <Text style={[styles.filterChipText, filterStatus === "unlocked" && styles.filterChipTextActive]}>
-              Unlocked
-            </Text>
-          </TouchableOpacity>
+          {["all", "locked", "pending", "unlocked"].map((status) => (
+            <TouchableOpacity
+              key={status}
+              style={[styles.filterChip, filterStatus === status && styles.filterChipActive]}
+              onPress={() => setFilterStatus(status as any)}
+            >
+              <Text style={[styles.filterChipText, filterStatus === status && styles.filterChipTextActive]}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Payout History */}
@@ -206,36 +195,43 @@ export default function Payout({
           <Text style={styles.sectionTitle}>
             {filterStatus === "all" ? "All Payouts" : `${filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)} Payouts`} ({filteredPayouts.length})
           </Text>
-          
+
           {filteredPayouts.map((payout) => (
-            <TouchableOpacity 
+            <TouchableOpacity
               key={payout.id}
               style={styles.payoutCard}
-              onPress={() => router.push(`/(payout)/${payout.id}/`)}
+              onPress={() => router.push(`/(payout)/${payout.id}`)}
               activeOpacity={0.7}
             >
               <View style={styles.payoutCardLeft}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, { backgroundColor: payout.status === 'unlocked' ? '#4CAF5020' : '#222' }]}>
                   {getStatusIcon(payout.status)}
                 </View>
                 <View style={styles.payoutInfo}>
-                  <Text style={styles.payoutInterval}>{payout.interval}</Text>
+                  <Text style={styles.payoutInterval}>{payout.title || payout.interval}</Text>
+                  <Text style={{ fontSize: 12, color: '#666', marginBottom: 2 }}>{payout.recurrence}</Text>
                   <Text style={styles.payoutDate}>
-                    {payout.status === "locked" 
-                      ? `Unlocks ${payout.unlockDate?.toLocaleDateString() || 'N/A'}`
-                      : `Unlocked ${payout.unlockDate?.toLocaleDateString() || 'N/A'}`
+                    {payout.status === "locked"
+                      ? `Unlocks ${new Date(payout.unlockDate).toLocaleDateString()}`
+                      : `Unlocked ${new Date(payout.unlockDate).toLocaleDateString()}`
                     }
                   </Text>
                 </View>
               </View>
-              
+
               <View style={styles.payoutCardRight}>
-                <Text style={styles.payoutAmount}>
+                <Text style={[styles.payoutAmount, { color: payout.status === 'unlocked' ? '#4CAF50' : DefaultColors.white }]}>
                   {showAmounts ? `₦${formatMoney(payout.amount)}` : "****"}
                 </Text>
-                <View style={styles.statusBadge}>
-                  <Text style={styles.statusText}>
-                    {payout.status}
+                <View style={[styles.statusBadge, {
+                  backgroundColor: payout.status === 'unlocked' ? '#4CAF5020' :
+                    payout.status === 'pending' ? '#FFC10720' : '#333'
+                }]}>
+                  <Text style={[styles.statusText, {
+                    color: payout.status === 'unlocked' ? '#4CAF50' :
+                      payout.status === 'pending' ? '#FFC107' : '#888'
+                  }]}>
+                    {payout.status.charAt(0).toUpperCase() + payout.status.slice(1)}
                   </Text>
                 </View>
               </View>
@@ -247,33 +243,12 @@ export default function Payout({
               <Lock size={48} color="#888" />
               <Text style={styles.emptyTitle}>No Payouts Found</Text>
               <Text style={styles.emptyText}>
-                {searchQuery 
+                {searchQuery
                   ? "Try adjusting your search"
-                  : "Lock funds to start receiving scheduled payouts"}
+                  : "Create a schedule to start receiving payouts"}
               </Text>
             </View>
           )}
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => router.push("/lock-funds")}
-          >
-            <Lock size={18} color={DefaultColors.black} />
-            <Text style={styles.actionButtonText}>Lock Funds</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.actionButton, styles.secondaryActionButton]}
-            onPress={() => router.push("/schedule")}
-          >
-            <Calendar size={18} color={DefaultColors.white} />
-            <Text style={[styles.actionButtonText, styles.secondaryActionText]}>
-              View Schedule
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
     </ScrollView>

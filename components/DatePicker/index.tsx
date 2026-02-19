@@ -29,6 +29,7 @@ export default function DatePicker({
         onDismiss();
       }}
       minimumDate={new Date()}
+      display="default"
       is24Hour={true}
     />
   );

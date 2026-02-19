@@ -46,7 +46,7 @@ export default function OnboardingScreen() {
           </View>
 
           {/* App Name */}
-          <Text style={styles.appName}>SaveGuard</Text>
+          <Text style={styles.appName}>ISC</Text>
           <Text style={styles.tagline}>Master Your Impulses</Text>
 
           {/* Features Grid */}

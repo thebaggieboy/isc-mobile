@@ -1,45 +1,21 @@
 import { StyleSheet, Text, View, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
+import Toast from 'react-native-toast-message';
 import Balance from "@/components/Balance";
 import UpcomingCard from "@/components/Upcomingcard";
 import ImpulseControl from "@/components/ImpulseControl";
 import { DefaultColors } from "@/constants/colors";
 import { userService, UserProfile, UserBalance, UserStats } from "@/services/api/user.service";
+import { scheduleService } from "@/services/api/schedule.service";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 
-// Mock data for schedules (replace with actual API call later)
-const mockSchedules = [
-  {
-    id: "1",
-    title: "Monthly Savings",
-    date: new Date(2026, 1, 1), // Feb 1, 2026
-    amount: 50000,
-  },
-  {
-    id: "2",
-    title: "Rent Payment",
-    date: new Date(2026, 1, 5), // Feb 5, 2026
-    amount: 150000,
-  },
-];
 
-// Mock data for payouts (replace with actual API call later)
-const mockPayouts = [
-  {
-    id: "1",
-    interval: "30 Day Lock",
-    unlockDate: new Date(2026, 1, 15), // Feb 15, 2026
-    amount: 75000,
-  },
-  {
-    id: "2",
-    interval: "14 Day Lock",
-    unlockDate: new Date(2026, 1, 20), // Feb 20, 2026
-    amount: 45000,
-  },
-];
 
 export default function Home() {
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [payouts, setPayouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,9 +23,13 @@ export default function Home() {
   const [balance, setBalance] = useState<UserBalance | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
+
+
 
   const fetchUserData = async (isRefreshing = false) => {
     try {
@@ -59,15 +39,22 @@ export default function Home() {
       setError(null);
 
       // Fetch all user data in parallel
-      const [userData, balanceData, statsData] = await Promise.all([
+      const [userData, balanceData, statsData, schedulesData, payoutsData] = await Promise.all([
         userService.getCurrentUser(),
         userService.getBalance(),
         userService.getStats(),
+        scheduleService.getSchedules(),
+        scheduleService.getPayouts(),
       ]);
 
       setUser(userData);
       setBalance(balanceData);
       setStats(statsData);
+      setSchedules(schedulesData);
+      setPayouts(payoutsData);
+
+      // Check for new user and KYC status
+      handleWelcomeToast(userData);
     } catch (err: any) {
       console.error('Error fetching user data:', err);
       setError(err.message || 'Failed to load user data');
@@ -75,6 +62,41 @@ export default function Home() {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  const handleWelcomeToast = (userData: UserProfile) => {
+    // Check if user was created in the last 5 minutes
+    const createdAt = new Date(userData.createdAt).getTime();
+    const now = new Date().getTime();
+    const isNewUser = (now - createdAt) < 5 * 60 * 1000;
+
+    if (isNewUser) {
+      Toast.show({
+        type: 'success',
+        text1: 'Welcome to SaveGuard! 🚀',
+        text2: 'Your journey to financial freedom starts here.',
+        visibilityTime: 4000,
+      });
+    }
+
+    // Check KYC Status
+    // We use a slight delay to not overlap toasts found if user is new
+    setTimeout(() => {
+      if (userData.kycStatus === 'pending' || userData.kycStatus === 'unverified') {
+        Toast.show({
+          type: 'info',
+          text1: 'Complete Verification 🛡️',
+          text2: 'Verify your identity to unlock full features.',
+          visibilityTime: 5000,
+        });
+      } else if (userData.kycStatus === 'verified' && isNewUser) {
+        Toast.show({
+          type: 'success',
+          text1: 'Account Verified ✅',
+          text2: 'You are all set to save and withdraw!',
+        });
+      }
+    }, isNewUser ? 4500 : 1000);
   };
 
   const onRefresh = () => {
@@ -110,9 +132,18 @@ export default function Home() {
   const userName = user?.fullName?.split(' ')[0] || user?.email?.split('@')[0] || 'User';
   const userBalance = balance?.balance || 0;
 
+  // Filter out schedules where scheduledDate is today or in the past (completed)
+  const upcomingSchedules = schedules.filter((s) => {
+    const schedDate = new Date(s.scheduledDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    schedDate.setHours(0, 0, 0, 0);
+    return schedDate > today;
+  });
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -126,17 +157,17 @@ export default function Home() {
       >
         <View style={styles.HomeView}>
           <Balance userName={userName} balance={userBalance} />
-          
+
           <ImpulseControl
             savedThisMonth={stats?.savedThisMonth || 0}
             impulsesStopped={stats?.impulsesStopped || 0}
             currentStreak={stats?.currentStreak || 0}
             savingsGoal={stats?.savingsGoal || 0}
           />
-          
-          <UpcomingCard 
-            schedules={mockSchedules}
-            payouts={mockPayouts}
+
+          <UpcomingCard
+            schedules={upcomingSchedules}
+            payouts={payouts}
           />
         </View>
       </ScrollView>
@@ -165,7 +196,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: DefaultColors.text,
+    color: '#ccc',
   },
   errorContainer: {
     flex: 1,
@@ -176,7 +207,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: DefaultColors.error || '#ff0000',
+    color: '#EF4444',
     textAlign: 'center',
   },
   retryText: {

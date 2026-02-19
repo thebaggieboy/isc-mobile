@@ -10,7 +10,8 @@ import {
   ChevronRight,
   Mail,
   Phone,
-  Edit
+  Edit,
+  Building2
 } from "lucide-react-native";
 import {
   View,
@@ -47,6 +48,18 @@ export default function Profile({
   };
 
   const menuItems = [
+    {
+      id: "banks",
+      icon: Building2,
+      label: "Bank Accounts",
+      route: "/banks", // This matches the file name in (profile) folder, relative routing within tabs might need adjustment or absolute path
+    },
+    {
+      id: "kyc",
+      icon: Shield,
+      label: "KYC Verification",
+      route: "/kyc",
+    },
     {
       id: "settings",
       icon: Settings,

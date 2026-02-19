@@ -28,6 +28,12 @@ export default function PayoutLayout() {
           headerBackTitle: "Back",
         }}
       />
+      <Stack.Screen
+        name="withdraw"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

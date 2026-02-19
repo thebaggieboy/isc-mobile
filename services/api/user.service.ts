@@ -2,7 +2,7 @@
 import { api } from './index';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://localhost:3000/api/v1';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export interface UserProfile {
   id: string;
@@ -11,11 +11,14 @@ export interface UserProfile {
   phone?: string;
   createdAt: string;
   updatedAt: string;
+  kycStatus?: 'pending' | 'verified' | 'failed' | 'unverified';
 }
 
 export interface UserBalance {
   balance: number;
-  currency: string;
+  totalLocked: number;
+  available: number;
+  currency?: string;
 }
 
 export interface UserStats {

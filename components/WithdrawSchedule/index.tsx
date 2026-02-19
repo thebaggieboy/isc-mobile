@@ -5,9 +5,10 @@ import { formatDateToViewable } from "@/utils/time";
 import { scheduleConfigToRRule } from "@/utils/withdrawSchedule";
 import { AlertCircle, Calendar } from "lucide-react-native";
 import { useCallback, useMemo, useReducer, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, TouchableOpacity, View } from "react-native";
 import DatePicker from "../DatePicker";
 import AmountInput from "./components/AmountInput";
+import TitleInput from "./components/TitleInput";
 import PayoutAmountInput from "./components/PayoutAmountInput";
 import FrequencyPicker from "./components/FrequencyPicker";
 import MonthDayPicker from "./components/MonthDayPicker";
@@ -72,6 +73,10 @@ export default function CreateWithdrawSchedule({
     dispatch(scheduleActions.setAmount(newAmount));
   }, []);
 
+  const handleTitleChange = useCallback((newTitle: string) => {
+    dispatch(scheduleActions.setTitle(newTitle));
+  }, []);
+
   const handlePayoutAmountChange = useCallback((newAmount: number) => {
     dispatch(scheduleActions.setPayoutAmount(newAmount));
   }, []);
@@ -88,6 +93,11 @@ export default function CreateWithdrawSchedule({
 
   return (
     <View style={styles.container}>
+      <TitleInput
+        title={state.title}
+        onTitleChange={handleTitleChange}
+      />
+
       <AmountInput
         amount={amount}
         onAmountChange={handleAmountChange}
@@ -128,19 +138,19 @@ export default function CreateWithdrawSchedule({
           />
           <Text style={styles.sectionTitle}>Starts</Text>
         </View>
-        <Pressable
+        <TouchableOpacity
           style={styles.selectDateButton}
           onPress={() => setShowStartDatePicker(true)}>
           <Text style={styles.dateButtonText}>
             {formatDateToViewable(new Date(schedule.dtStart))}
           </Text>
-          <DatePicker
-            onDismiss={() => setShowStartDatePicker(false)}
-            open={showStartDatePicker}
-            selectedDate={new Date(schedule.dtStart)}
-            onDateSelected={handleStartDateChange}
-          />
-        </Pressable>
+        </TouchableOpacity>
+        <DatePicker
+          onDismiss={() => setShowStartDatePicker(false)}
+          open={showStartDatePicker}
+          selectedDate={new Date(schedule.dtStart)}
+          onDateSelected={handleStartDateChange}
+        />
       </View>
 
       <View style={styles.sectionRow}>
@@ -151,19 +161,19 @@ export default function CreateWithdrawSchedule({
           />
           <Text style={styles.sectionTitle}>Ends</Text>
         </View>
-        <Pressable
+        <TouchableOpacity
           style={styles.selectDateButton}
           onPress={() => setShowEndDatePicker(true)}>
           <Text style={styles.dateButtonText}>
             {formatDateToViewable(new Date(schedule.until))}
           </Text>
-          <DatePicker
-            onDismiss={() => setShowEndDatePicker(false)}
-            open={showEndDatePicker}
-            selectedDate={new Date(schedule.until)}
-            onDateSelected={handleEndDateChange}
-          />
-        </Pressable>
+        </TouchableOpacity>
+        <DatePicker
+          onDismiss={() => setShowEndDatePicker(false)}
+          open={showEndDatePicker}
+          selectedDate={new Date(schedule.until)}
+          onDateSelected={handleEndDateChange}
+        />
       </View>
 
       {!validation.isValid && (
