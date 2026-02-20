@@ -253,83 +253,84 @@ export default function ScheduleDetailScreen() {
                             </Text>
                         </View>
 
-                        <View style={styles.detailLabel}>
-                            <CalendarCheck size={16} color="#888" />
-                            <Text style={styles.detailLabelText}>Ends On</Text>
-                        </View>
-                        <Text style={styles.detailValue}>
-                            {(() => {
-                                const parts = (schedule.recurrence || '').split(';').find(p => p.startsWith('until='));
-                                return parts ? formatDate(parts.split('=')[1]) : formatDate(schedule.scheduledDate);
-                            })()}
-                        </Text>
-                    </View>
-
-                    <View style={styles.detailRow}>
-                        <View style={styles.detailLabel}>
-                            <Calendar size={16} color="#888" />
-                            <Text style={styles.detailLabelText}>
-                                {isCompleted ? "Completed" : isPast ? "Overdue By" : "Time Left"}
+                        <View style={styles.detailRow}>
+                            <View style={styles.detailLabel}>
+                                <CalendarCheck size={16} color="#888" />
+                                <Text style={styles.detailLabelText}>Ends On</Text>
+                            </View>
+                            <Text style={styles.detailValue}>
+                                {(() => {
+                                    const parts = (schedule.recurrence || '').split(';').find(p => p.startsWith('until='));
+                                    return parts ? formatDate(parts.split('=')[1]) : formatDate(schedule.scheduledDate);
+                                })()}
                             </Text>
                         </View>
-                        <Text style={[styles.detailValue, {
-                            color: isCompleted ? "#22C55E" : isPast ? "#EF4444" : DefaultColors.white
-                        }]}>
+
+                        <View style={styles.detailRow}>
+                            <View style={styles.detailLabel}>
+                                <Calendar size={16} color="#888" />
+                                <Text style={styles.detailLabelText}>
+                                    {isCompleted ? "Completed" : isPast ? "Overdue By" : "Time Left"}
+                                </Text>
+                            </View>
+                            <Text style={[styles.detailValue, {
+                                color: isCompleted ? "#22C55E" : isPast ? "#EF4444" : DefaultColors.white
+                            }]}>
+                                {isCompleted
+                                    ? "Payout processed"
+                                    : isPast
+                                        ? `${Math.abs(daysRemaining)} days ago`
+                                        : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Projected Balance Card */}
+                    <View style={styles.projectedCard}>
+                        <View style={styles.projectedHeader}>
+                            <ArrowDownRight size={20} color="#22C55E" />
+                            <Text style={styles.projectedTitle}>
+                                {isCompleted ? "Balance After Payout" : "Projected Balance After Payout"}
+                            </Text>
+                        </View>
+                        <View style={styles.projectedRow}>
+                            <View>
+                                <Text style={styles.projectedLabel}>Current Balance</Text>
+                                <Text style={styles.projectedValue}>₦{formatMoney(currentBalance)}</Text>
+                            </View>
+                            <View style={styles.projectedDivider} />
+                            <View>
+                                <Text style={styles.projectedLabel}>
+                                    {isCompleted ? "After Payout" : "After Completion"}
+                                </Text>
+                                <Text style={[styles.projectedValue, { color: "#22C55E" }]}>
+                                    ₦{formatMoney(projectedBalance)}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Complete Payout Button */}
+                    {!isCompleted && (
+                        <TouchableOpacity
+                            style={styles.completeButton}
+                            onPress={handleCompletePayout}
+                        >
+                            <Text style={styles.completeButtonText}>Complete Payout</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    {/* Info Card */}
+                    <View style={styles.instructionCard}>
+                        <Info size={20} color={DefaultColors.primary} />
+                        <Text style={styles.instructionText}>
                             {isCompleted
-                                ? "Payout processed"
-                                : isPast
-                                    ? `${Math.abs(daysRemaining)} days ago`
-                                    : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`}
+                                ? "This schedule has been completed and the funds have been added to your available balance."
+                                : "Your funds will be automatically processed on the scheduled date and moved to your available balance for withdrawal."}
                         </Text>
                     </View>
                 </View>
-
-                {/* Projected Balance Card */}
-                <View style={styles.projectedCard}>
-                    <View style={styles.projectedHeader}>
-                        <ArrowDownRight size={20} color="#22C55E" />
-                        <Text style={styles.projectedTitle}>
-                            {isCompleted ? "Balance After Payout" : "Projected Balance After Payout"}
-                        </Text>
-                    </View>
-                    <View style={styles.projectedRow}>
-                        <View>
-                            <Text style={styles.projectedLabel}>Current Balance</Text>
-                            <Text style={styles.projectedValue}>₦{formatMoney(currentBalance)}</Text>
-                        </View>
-                        <View style={styles.projectedDivider} />
-                        <View>
-                            <Text style={styles.projectedLabel}>
-                                {isCompleted ? "After Payout" : "After Completion"}
-                            </Text>
-                            <Text style={[styles.projectedValue, { color: "#22C55E" }]}>
-                                ₦{formatMoney(projectedBalance)}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Complete Payout Button */}
-                {!isCompleted && (
-                    <TouchableOpacity
-                        style={styles.completeButton}
-                        onPress={handleCompletePayout}
-                    >
-                        <Text style={styles.completeButtonText}>Complete Payout</Text>
-                    </TouchableOpacity>
-                )}
-
-                {/* Info Card */}
-                <View style={styles.instructionCard}>
-                    <Info size={20} color={DefaultColors.primary} />
-                    <Text style={styles.instructionText}>
-                        {isCompleted
-                            ? "This schedule has been completed and the funds have been added to your available balance."
-                            : "Your funds will be automatically processed on the scheduled date and moved to your available balance for withdrawal."}
-                    </Text>
-                </View>
-            </View>
-        </ScrollView>
+            </ScrollView>
         </SafeAreaView >
     );
 }

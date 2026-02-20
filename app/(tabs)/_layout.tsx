@@ -3,8 +3,17 @@ import { Tabs, useRouter } from "expo-router";
 import { House, PiggyBank, Banknote, User } from "lucide-react-native";
 import { DefaultColors } from "@/constants/colors";
 
+import { useEffect } from "react";
+import { registerForPushNotificationsAsync } from "@/services/notification.service";
+
 export default function TabsLayout() {
   const router = useRouter();
+
+  useEffect(() => {
+    registerForPushNotificationsAsync().then(token => {
+      if (token) console.log("Push token registered:", token);
+    });
+  }, []);
 
   return (
     <Tabs

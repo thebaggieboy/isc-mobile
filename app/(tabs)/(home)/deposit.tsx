@@ -97,8 +97,13 @@ export default function Deposit() {
               <Text style={styles.currencyPrefix}>₦</Text>
               <TextInput
                 style={styles.input}
-                value={amount ? formatMoney(numericAmount) : ""}
-                onChangeText={setAmount}
+                value={amount}
+                onChangeText={(text) => {
+                  // Allow only numeric input (and maybe one decimal point if needed, but keeping it simple integer for now as per original intent)
+                  // Original regex was /[^0-9]/g which means integers.
+                  const cleaned = text.replace(/[^0-9]/g, "");
+                  setAmount(cleaned);
+                }}
                 placeholder="0"
                 keyboardType="numeric"
                 placeholderTextColor="#555"
