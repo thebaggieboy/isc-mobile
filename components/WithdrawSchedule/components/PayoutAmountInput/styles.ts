@@ -19,11 +19,11 @@ export const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: "#1A1A1A",
-        borderRadius: 16,
-        paddingHorizontal: 20,
-        paddingVertical: 18,
+        borderRadius: 12, // Match others
+        paddingHorizontal: 16,
+        paddingVertical: 5, // Reduced from 18
         borderWidth: 1,
-        borderColor: "#2A2A2A",
+        borderColor: "#333",
     },
     currencySymbol: {
         fontSize: 24,

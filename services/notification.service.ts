@@ -5,15 +5,26 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './index';
 
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-    }),
-});
+if (Platform.OS !== 'web') {
+    // Notifications.setNotificationHandler({
+    //     handleNotification: async () => ({
+    //         shouldShowAlert: true,
+    //         shouldPlaySound: true,
+    //         shouldSetBadge: false,
+    //     }),
+    // });
+}
 
 export async function registerForPushNotificationsAsync() {
+    // Disabled globally for now to support Expo Go (SDK 54)
+    console.log('Push notifications disabled');
+    return null;
+
+    if (Platform.OS === 'web') {
+        console.log('Push notifications not supported on web');
+        return;
+    }
+
     if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
             name: 'default',
@@ -47,7 +58,10 @@ export async function registerForPushNotificationsAsync() {
     try {
         const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
         if (!projectId) {
-            // Fallback or just get token without project ID if managed workflow handles it differently
+            console.log('Project ID not found. Run calling `eas init` to fix this.');
+            // On Dev, we can't get token without it.
+            // But we don't want to crash.
+            return;
         }
 
         const tokenData = await Notifications.getExpoPushTokenAsync({

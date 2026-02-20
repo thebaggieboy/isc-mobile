@@ -62,7 +62,7 @@ export default function Balance({ balance, userName }: BalanceProps) {
           buttonStyle={styles.actionButton}
           titleStyle={styles.actionButtonTitle}
           title="Deposit"
-          onPress={() => router.push("/deposit")}
+          onPress={() => router.push("/(tabs)/(deposit)")}
         >
           <Plus size={18} color={DefaultColors.black} />
         </Button>

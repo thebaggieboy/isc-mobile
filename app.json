@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "isc",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
@@ -45,6 +45,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8ef80c92-d510-4cff-b3d7-29decf50c251"
+      }
+    },
+    "owner": "baggieboy"
   }
 }

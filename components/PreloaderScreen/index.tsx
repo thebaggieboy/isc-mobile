@@ -1,9 +1,9 @@
 import { DefaultColors } from "@/constants/colors";
 import { Shield } from "lucide-react-native";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   ActivityIndicator,
   Animated
 } from "react-native";
@@ -32,7 +32,7 @@ export default function PreloaderScreen() {
 
   return (
     <View style={styles.container}>
-      <Animated.View 
+      <Animated.View
         style={[
           styles.content,
           {
@@ -55,9 +55,9 @@ export default function PreloaderScreen() {
         <Text style={styles.tagline}>Master Your Impulses</Text>
 
         {/* Loading Indicator */}
-        <ActivityIndicator 
-          size="large" 
-          color="#ff4444" 
+        <ActivityIndicator
+          size="large"
+          color="#ff4444"
           style={styles.loader}
         />
       </Animated.View>

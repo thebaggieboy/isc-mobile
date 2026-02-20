@@ -35,6 +35,7 @@ export const scheduleService = {
         payoutAmount: number;
         scheduledDate: Date;
         recurrence?: string;
+        autoPayout?: boolean;
     }): Promise<Schedule> => {
         try {
             const token = await AsyncStorage.getItem('accessToken');
@@ -151,6 +152,23 @@ export const scheduleService = {
         } catch (error) {
             console.error('Complete payout error:', error);
             throw error;
+        }
+    },
+
+    // Trigger payout simulation
+    simulatePayouts: async (): Promise<void> => {
+        try {
+            const token = await AsyncStorage.getItem('accessToken');
+            await fetch(`${API_URL}/webhooks/simulate-payouts`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+        } catch (error) {
+            console.error('Simulate payouts error:', error);
+            // Non-critical, so we don't throw
         }
     },
 };

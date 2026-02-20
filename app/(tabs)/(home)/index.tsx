@@ -149,7 +149,12 @@ export default function Home() {
   // Lock count: payouts with "locked" status
   const lockCount = payouts.filter(p => p.status === 'locked').length;
 
-  // Total locked amount from payouts
+  // Total Amount Scheduled (Sum of all active schedules' original amounts)
+  const totalScheduledAmount = schedules
+    .filter(s => s.status !== 'completed' && s.status !== 'cancelled')
+    .reduce((sum: number, s: any) => sum + (s.amount || 0), 0);
+
+  // Total locked amount from payouts (Actual currently locked funds)
   const totalLocked = payouts
     .filter(p => p.status === 'locked')
     .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
@@ -193,7 +198,7 @@ export default function Home() {
           <Balance userName={userName} balance={userBalance} />
 
           <ImpulseControl
-            totalLocked={totalLocked}
+            totalLocked={totalScheduledAmount} // Showing Total Scheduled Amount as requested
             lockedThisMonth={lockedThisMonth}
             lockCount={lockCount}
             activeSchedules={activeSchedules}

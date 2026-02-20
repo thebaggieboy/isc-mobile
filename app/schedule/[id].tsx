@@ -181,22 +181,17 @@ export default function ScheduleDetailScreen() {
                     <View style={styles.quickStatsRow}>
                         <View style={styles.quickStatCard}>
                             <Lock size={18} color="#3B82F6" />
-                            <Text style={styles.quickStatValue}>₦{formatMoney(totalLocked)}</Text>
-                            <Text style={styles.quickStatLabel}>Total Locked</Text>
+                            <Text style={styles.quickStatValue}>₦{formatMoney(Math.max(0, schedule.amount - (isCompleted ? schedule.amount : 0)))}</Text>
+                            <Text style={styles.quickStatLabel}>Locked Balance</Text>
                         </View>
                         <View style={styles.quickStatCard}>
                             <CalendarCheck size={18} color={isCompleted || isPast ? "#22C55E" : "#F59E0B"} />
                             <Text style={styles.quickStatValue}>
-                                {isCompleted ? "Done" : isPast ? "Due" : `${daysRemaining}d`}
+                                {isCompleted ? "Done" : isPast ? "Due Now" : daysRemaining === 1 ? "Tomorrow" : `In ${daysRemaining} days`}
                             </Text>
                             <Text style={styles.quickStatLabel}>
-                                {isCompleted ? "Completed" : isPast ? "Overdue" : "Remaining"}
+                                {isCompleted ? "Completed" : "Next Unlock"}
                             </Text>
-                        </View>
-                        <View style={styles.quickStatCard}>
-                            <Wallet size={18} color="#22C55E" />
-                            <Text style={styles.quickStatValue}>₦{formatMoney(projectedBalance)}</Text>
-                            <Text style={styles.quickStatLabel}>After Payout</Text>
                         </View>
                     </View>
 
@@ -207,7 +202,7 @@ export default function ScheduleDetailScreen() {
                         <View style={styles.detailRow}>
                             <View style={styles.detailLabel}>
                                 <Info size={16} color="#888" />
-                                <Text style={styles.detailLabelText}>Base Amount</Text>
+                                <Text style={styles.detailLabelText}>Total Scheduled</Text>
                             </View>
                             <Text style={styles.detailValue}>₦{formatMoney(schedule.amount)}</Text>
                         </View>
@@ -215,15 +210,7 @@ export default function ScheduleDetailScreen() {
                         <View style={styles.detailRow}>
                             <View style={styles.detailLabel}>
                                 <TrendingDown size={16} color="#888" />
-                                <Text style={styles.detailLabelText}>Locked Funds</Text>
-                            </View>
-                            <Text style={styles.detailValue}>₦{formatMoney(schedule.amount)}</Text>
-                        </View>
-
-                        <View style={styles.detailRow}>
-                            <View style={styles.detailLabel}>
-                                <Target size={16} color="#888" />
-                                <Text style={styles.detailLabelText}>Payout Amount</Text>
+                                <Text style={styles.detailLabelText}>Payout Per Interval</Text>
                             </View>
                             <Text style={[styles.detailValue, { color: "#22C55E" }]}>
                                 ₦{formatMoney(schedule.payoutAmount)}
@@ -235,7 +222,11 @@ export default function ScheduleDetailScreen() {
                                 <Clock size={16} color="#888" />
                                 <Text style={styles.detailLabelText}>Frequency</Text>
                             </View>
-                            <Text style={styles.detailValue}>{schedule.recurrence}</Text>
+                            <Text style={styles.detailValue}>
+                                {schedule.recurrence.includes('monthly') ? 'Monthly' :
+                                    schedule.recurrence.includes('weekly') ? 'Weekly' :
+                                        schedule.recurrence.includes('daily') ? 'Daily' : 'One-time'}
+                            </Text>
                         </View>
                     </View>
 
@@ -270,43 +261,18 @@ export default function ScheduleDetailScreen() {
                             <View style={styles.detailLabel}>
                                 <Calendar size={16} color="#888" />
                                 <Text style={styles.detailLabelText}>
-                                    {isCompleted ? "Completed" : isPast ? "Overdue By" : "Time Left"}
+                                    Status
                                 </Text>
                             </View>
                             <Text style={[styles.detailValue, {
                                 color: isCompleted ? "#22C55E" : isPast ? "#EF4444" : DefaultColors.white
                             }]}>
                                 {isCompleted
-                                    ? "Payout processed"
+                                    ? "Completed"
                                     : isPast
-                                        ? `${Math.abs(daysRemaining)} days ago`
-                                        : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`}
+                                        ? "Overdue"
+                                        : `Active`}
                             </Text>
-                        </View>
-                    </View>
-
-                    {/* Projected Balance Card */}
-                    <View style={styles.projectedCard}>
-                        <View style={styles.projectedHeader}>
-                            <ArrowDownRight size={20} color="#22C55E" />
-                            <Text style={styles.projectedTitle}>
-                                {isCompleted ? "Balance After Payout" : "Projected Balance After Payout"}
-                            </Text>
-                        </View>
-                        <View style={styles.projectedRow}>
-                            <View>
-                                <Text style={styles.projectedLabel}>Current Balance</Text>
-                                <Text style={styles.projectedValue}>₦{formatMoney(currentBalance)}</Text>
-                            </View>
-                            <View style={styles.projectedDivider} />
-                            <View>
-                                <Text style={styles.projectedLabel}>
-                                    {isCompleted ? "After Payout" : "After Completion"}
-                                </Text>
-                                <Text style={[styles.projectedValue, { color: "#22C55E" }]}>
-                                    ₦{formatMoney(projectedBalance)}
-                                </Text>
-                            </View>
                         </View>
                     </View>
 

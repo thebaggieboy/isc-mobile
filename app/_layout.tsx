@@ -5,17 +5,18 @@ import { useEffect, useState } from "react";
 import PreloaderScreen from "@/components/PreloaderScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from 'react-native-toast-message';
-import { PaystackProvider } from 'react-native-paystack-webview';
+import { PaystackProvider } from '@/components/Providers/PaystackProvider';
 
 export default function RootLayout() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isReady, setIsReady] = useState(false);
+  const [session, setSession] = useState<string | null>(null);
+
   const router = useRouter();
   const segments = useSegments();
   const navigationState = useRootNavigationState();
 
+  // 1. Initialize App (Check Token) - Independent of Navigation
   useEffect(() => {
-    if (!navigationState?.key) return;
-
     const initializeApp = async () => {
       try {
         // Wait for preloader animation
@@ -23,33 +24,37 @@ export default function RootLayout() {
 
         // Check for auth token
         const token = await AsyncStorage.getItem("accessToken");
-
-        setIsLoading(false);
-
-        const inAuthGroup = segments[0] === '(auth)';
-
-        if (token) {
-          // If logged in but in auth group (login/signup/onboarding), go to home
-          if (inAuthGroup) {
-            router.replace('/(tabs)/(home)');
-          }
-        } else {
-          // If not logged in and not in auth group, go to onboarding
-          if (!inAuthGroup) {
-            router.replace('/(auth)/onboarding');
-          }
-        }
+        setSession(token);
       } catch (error) {
         console.error('Init error:', error);
-        setIsLoading(false);
-        router.replace('/(auth)/onboarding');
+      } finally {
+        setIsReady(true);
       }
     };
 
     initializeApp();
-  }, [navigationState?.key]);
+  }, []);
 
-  if (isLoading) {
+  // 2. Handle Navigation - Depends on Navigation State & Initialization
+  useEffect(() => {
+    if (!isReady || !navigationState?.key) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (session) {
+      // If logged in but in auth group (login/signup/onboarding), go to home
+      if (inAuthGroup) {
+        router.replace('/(tabs)/(home)');
+      }
+    } else {
+      // If not logged in and not in auth group, go to onboarding
+      if (!inAuthGroup) {
+        router.replace('/(auth)/onboarding');
+      }
+    }
+  }, [isReady, session, segments, navigationState?.key]);
+
+  if (!isReady) {
     return <PreloaderScreen />;
   }
 

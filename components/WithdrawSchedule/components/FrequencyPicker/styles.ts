@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
     opacity: 0.7,
   },
   inputGroupWrapper: {
-    marginTop: 8,
+    marginTop: 0,
   },
   inputGroup: {
     flexDirection: "row",
@@ -25,18 +25,20 @@ export const styles = StyleSheet.create({
     backgroundColor: "#1B1B1B",
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12, // Reduced from 14
     gap: 12,
+    borderWidth: 1,
+    borderColor: "#333",
   },
   stepperContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#111111",
     borderRadius: 8,
-    padding: 4,
-    gap: 8,
+    padding: 2, // Reduced from 4
+    gap: 4, // Reduced from 8
     borderWidth: 1,
-    borderColor: "#333333",
+    borderColor: "#333",
   },
   stepperButton: {
     width: 32,

@@ -41,7 +41,8 @@ export default function Schedule() {
         amount: scheduleState.amount,
         payoutAmount: scheduleState.payoutAmount,
         scheduledDate: new Date(scheduleState.schedule.dtStart),
-        recurrence: `${mapFrequencyToString(scheduleState.schedule.freq)};until=${new Date(scheduleState.schedule.until).toISOString()}`
+        recurrence: `${mapFrequencyToString(scheduleState.schedule.freq)};until=${new Date(scheduleState.schedule.until).toISOString()}`,
+        autoPayout: scheduleState.autoPayout,
       });
 
       Toast.show({
@@ -57,6 +58,13 @@ export default function Schedule() {
         scheduleState.amount
       );
 
+      // Trigger simulation to process any immediate payouts
+      try {
+        await scheduleService.simulatePayouts();
+      } catch (e) {
+        console.log("Simulation trigger failed (non-critical):", e);
+      }
+
       router.back();
     } catch (error) {
       console.error("Failed to create schedule:", error);
@@ -71,7 +79,7 @@ export default function Schedule() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#111111" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#050505" }}>
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}>
@@ -102,14 +110,14 @@ export default function Schedule() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
+    padding: 16,
     paddingBottom: 40,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 16, // Reduced from 20
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
   },
   backButton: {
     padding: 8,
@@ -117,21 +125,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20, // Reduced from 24
     fontWeight: "800",
     color: DefaultColors.white,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "400",
-    color: DefaultColors.white,
-    opacity: 0.7,
-    marginTop: 4,
+    color: DefaultColors.textSecondary,
+    marginTop: 2,
   },
   createButton: {
-    marginTop: 30,
+    marginTop: 24, // Reduced from 30
     backgroundColor: "#DC2626",
-    paddingVertical: 18,
-    borderRadius: 16,
+    paddingVertical: 16, // Reduced from 18
+    borderRadius: 12, // Match inputs
   },
 });

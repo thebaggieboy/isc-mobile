@@ -38,8 +38,10 @@ export default function PayoutScreen() {
     fetchData();
   };
 
-  // Total of ALL payouts (not just locked)
-  const totalPayoutAmount = payouts.reduce((sum, p) => sum + (p.amount || 0), 0);
+  // Total of COMPLETED/UNLOCKED payouts (Cumulative Withdrawals)
+  const totalPayoutAmount = payouts
+    .filter(p => p.status === 'completed' || p.status === 'unlocked')
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
 
   // Next upcoming payout (earliest locked one)
   const upcomingPayoutObj = payouts

@@ -98,6 +98,18 @@ export default function CreateWithdrawSchedule({
         onTitleChange={handleTitleChange}
       />
 
+      <View style={styles.autoPayoutContainer}>
+        <View style={styles.autoPayoutTextContent}>
+          <Text style={styles.autoPayoutTitle}>Automatic Payout</Text>
+          <Text style={styles.autoPayoutSubtitle}>Transfer to default bank when due</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => dispatch(scheduleActions.setAutoPayout(!state.autoPayout))}
+          style={[styles.toggleButton, { backgroundColor: state.autoPayout ? '#DC2626' : '#333' }]}>
+          <View style={[styles.toggleKnob, { alignSelf: state.autoPayout ? 'flex-end' : 'flex-start' }]} />
+        </TouchableOpacity>
+      </View>
+
       <AmountInput
         amount={amount}
         onAmountChange={handleAmountChange}

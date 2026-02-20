@@ -13,26 +13,28 @@ export const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    fontWeight: "600",
-    color: DefaultColors.white,
-    opacity: 0.7,
+    fontWeight: "700",
+    color: DefaultColors.textSecondary,
+    fontSize: 12,
+    textTransform: "uppercase",
   },
   picker: {
-    width: 100,
+    width: 80, // Reduced from 100
     backgroundColor: "#1B1B1B",
     borderWidth: 1,
-    borderColor: "#333333",
+    borderColor: "#333",
     color: DefaultColors.white,
     borderRadius: 12,
-    height: 44,
+    height: 40, // Reduced from 44
+    justifyContent: "center",
   },
   pickerItem: {
     color: DefaultColors.white,
-    padding: 20,
+    fontSize: 14,
   },
   warningText: {
     fontSize: 12,
-    color: "#FFA500",
+    color: "#EF4444", // Better red/orange
     marginTop: 4,
     fontStyle: "italic",
   },

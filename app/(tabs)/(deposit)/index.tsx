@@ -22,7 +22,7 @@ import { userService, UserProfile } from "@/services/api/user.service";
 import { api } from "@/services/api";
 import { notifyDeposit } from "@/services/notifications";
 
-const QUICK_AMOUNTS = [1000, 5000, 10000, 20000];
+const QUICK_AMOUNTS = [10000, 50000, 100000, 200000];
 
 export default function Deposit() {
   const [amount, setAmount] = useState("");
@@ -161,11 +161,21 @@ export default function Deposit() {
               <Text style={styles.currencyPrefix}>₦</Text>
               <TextInput
                 style={styles.input}
-                value={amountParsed}
-                onChangeText={setAmount}
+                value={amount}
+                onChangeText={(text) => setAmount(text.replace(/[^0-9.]/g, ''))}
                 placeholder="0.00"
                 keyboardType="numeric"
                 placeholderTextColor="#666"
+                onBlur={() => {
+                  if (amount) {
+                    const num = parseFloat(amount);
+                    if (!isNaN(num)) setAmount(num.toString()); // Keep it simpler for now, or use formatMoney? 
+                    // actually formatMoney adds commas which we stripped. 
+                    // If we want commas, we need to handle them in onChangeText. 
+                    // For now, let's just leave raw number OR handle commas properly.
+                    // Let's just NOT format on blur to avoid complex edit state.
+                  }
+                }}
               />
             </View>
 

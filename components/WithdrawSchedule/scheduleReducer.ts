@@ -18,6 +18,7 @@ export type ScheduleAction =
   | { type: "SET_AMOUNT"; amount: number }
   | { type: "SET_PAYOUT_AMOUNT"; amount: number }
   | { type: "SET_TITLE"; title: string }
+  | { type: "SET_AUTO_PAYOUT"; enabled: boolean }
   | { type: "RESET"; startDate?: Date };
 
 export interface ScheduleState {
@@ -25,6 +26,7 @@ export interface ScheduleState {
   title: string;
   amount: number;
   payoutAmount: number;
+  autoPayout: boolean;
   validation: {
     isValid: boolean;
     errors: string[];
@@ -40,6 +42,7 @@ export function createInitialState(
     title: "Withdrawal Schedule",
     amount: 0,
     payoutAmount: 0,
+    autoPayout: false,
     validation: validateScheduleConfig(schedule),
   };
 }
@@ -49,12 +52,14 @@ function updateStateWithValidation(
   title: string,
   amount: number,
   payoutAmount: number,
+  autoPayout: boolean,
 ): ScheduleState {
   return {
     schedule,
     title,
     amount,
     payoutAmount,
+    autoPayout,
     validation: validateScheduleConfig(schedule),
   };
 }
@@ -77,13 +82,19 @@ export function scheduleReducer(
   state: ScheduleState,
   action: ScheduleAction,
 ): ScheduleState {
-  const { schedule, title, amount, payoutAmount } = state;
+  const { schedule, title, amount, payoutAmount, autoPayout } = state;
 
   switch (action.type) {
     case "SET_TITLE": {
       return {
         ...state,
         title: action.title,
+      };
+    }
+    case "SET_AUTO_PAYOUT": {
+      return {
+        ...state,
+        autoPayout: action.enabled,
       };
     }
     case "SET_FREQUENCY": {
@@ -114,7 +125,7 @@ export function scheduleReducer(
         newSchedule.byMonthDay = dayjs(schedule.dtStart).get("date");
       }
 
-      return updateStateWithValidation(newSchedule, title, amount, payoutAmount);
+      return updateStateWithValidation(newSchedule, title, amount, payoutAmount, autoPayout);
     }
 
     case "SET_INTERVAL": {
@@ -132,6 +143,7 @@ export function scheduleReducer(
         title,
         amount,
         payoutAmount,
+        autoPayout,
       );
     }
 
@@ -162,6 +174,7 @@ export function scheduleReducer(
         title,
         amount,
         payoutAmount,
+        autoPayout,
       );
     }
 
@@ -176,6 +189,7 @@ export function scheduleReducer(
         title,
         amount,
         payoutAmount,
+        autoPayout,
       );
     }
 
@@ -216,6 +230,7 @@ export function scheduleReducer(
         title,
         amount,
         payoutAmount,
+        autoPayout,
       );
     }
 
@@ -234,6 +249,7 @@ export function scheduleReducer(
           title,
           amount,
           payoutAmount,
+          autoPayout,
         );
       }
 
@@ -245,6 +261,7 @@ export function scheduleReducer(
         title,
         amount,
         payoutAmount,
+        autoPayout,
       );
     }
 
@@ -315,6 +332,11 @@ export const scheduleActions = {
   setTitle: (title: string): ScheduleAction => ({
     type: "SET_TITLE",
     title,
+  }),
+
+  setAutoPayout: (enabled: boolean): ScheduleAction => ({
+    type: "SET_AUTO_PAYOUT",
+    enabled,
   }),
 
   reset: (startDate?: Date): ScheduleAction => ({
