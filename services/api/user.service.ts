@@ -58,11 +58,12 @@ export const userService = {
   getBalance: async (): Promise<UserBalance> => {
     try {
       const token = await AsyncStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/user/balance`, {
+      const response = await fetch(`${API_URL}/user/balance?t=${Date.now()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
         },
       });
 

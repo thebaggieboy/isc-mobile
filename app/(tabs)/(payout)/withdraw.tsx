@@ -15,6 +15,7 @@ import { ArrowLeft, Wallet, Building2, CheckCircle2 } from "lucide-react-native"
 import { formatMoney } from "@/utils/amount";
 import { userService } from "@/services/api/user.service";
 import { scheduleService } from "@/services/api/schedule.service";
+import { api } from "@/services/api";
 import { notifyWithdrawal } from "@/services/notifications";
 
 export default function WithdrawScreen() {
@@ -61,8 +62,10 @@ export default function WithdrawScreen() {
 
         try {
             setLoading(true);
-            // Simulate API call - Connect to real endpoint later
-            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Call Real API
+            await api.withdraw(Number(amount));
+
             setSuccess(true);
 
             // Fire local notification
@@ -71,8 +74,8 @@ export default function WithdrawScreen() {
             setTimeout(() => {
                 router.back();
             }, 1500);
-        } catch (error) {
-            Alert.alert("Error", "Failed to process withdrawal");
+        } catch (error: any) {
+            Alert.alert("Error", error.message || "Failed to process withdrawal");
         } finally {
             setLoading(false);
         }

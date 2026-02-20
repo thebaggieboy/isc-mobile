@@ -1,6 +1,6 @@
-import { StyleSheet, Text, View, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
+import { StyleSheet, Text, View, ScrollView, ActivityIndicator, RefreshControl, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Toast from 'react-native-toast-message';
 import Balance from "@/components/Balance";
 import UpcomingCard from "@/components/Upcomingcard";
@@ -8,12 +8,11 @@ import ImpulseControl from "@/components/ImpulseControl";
 import { DefaultColors } from "@/constants/colors";
 import { userService, UserProfile, UserBalance } from "@/services/api/user.service";
 import { scheduleService } from "@/services/api/schedule.service";
-import { useFocusEffect } from "expo-router";
-import { useCallback } from "react";
-
-
+import { useFocusEffect, useRouter } from "expo-router";
+import { ArrowDownRight, ArrowUpRight, Clock } from "lucide-react-native";
 
 export default function Home() {
+  const router = useRouter();
   const [schedules, setSchedules] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -196,9 +195,10 @@ export default function Home() {
       >
         <View style={styles.HomeView}>
           <Balance userName={userName} balance={userBalance} />
+ 
 
           <ImpulseControl
-            totalLocked={totalScheduledAmount} // Showing Total Scheduled Amount as requested
+            totalLocked={totalLocked} // Reverted to Actual Locked Funds (from payouts)
             lockedThisMonth={lockedThisMonth}
             lockCount={lockCount}
             activeSchedules={activeSchedules}

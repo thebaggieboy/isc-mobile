@@ -100,6 +100,30 @@ class ApiService {
     }
   }
 
+  async withdraw(amount: number) {
+    try {
+      const headers = await this.getAuthHeader();
+      const response = await fetch(`${API_URL}/transactions/withdraw`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify({ amount }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Withdrawal failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Withdraw error:', error);
+      throw error;
+    }
+  }
+
   async logout() {
     await AsyncStorage.removeItem('accessToken');
     await AsyncStorage.removeItem('refreshToken');

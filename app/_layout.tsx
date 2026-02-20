@@ -39,20 +39,27 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isReady || !navigationState?.key) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const performCheck = async () => {
+      const token = await AsyncStorage.getItem("accessToken");
+      setSession(token);
 
-    if (session) {
-      // If logged in but in auth group (login/signup/onboarding), go to home
-      if (inAuthGroup) {
-        router.replace('/(tabs)/(home)');
+      const inAuthGroup = segments[0] === '(auth)';
+
+      if (token) {
+        // If logged in but in auth group (login/signup/onboarding), go to home
+        if (inAuthGroup) {
+          router.replace('/(tabs)/(home)');
+        }
+      } else {
+        // If not logged in and not in auth group, go to onboarding/login
+        if (!inAuthGroup) {
+          router.replace('/(auth)/onboarding');
+        }
       }
-    } else {
-      // If not logged in and not in auth group, go to onboarding
-      if (!inAuthGroup) {
-        router.replace('/(auth)/onboarding');
-      }
-    }
-  }, [isReady, session, segments, navigationState?.key]);
+    };
+
+    performCheck();
+  }, [isReady, segments, navigationState?.key]);
 
   if (!isReady) {
     return <PreloaderScreen />;
