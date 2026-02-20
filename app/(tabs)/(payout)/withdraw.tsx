@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     StyleSheet,
     View,
@@ -13,17 +13,49 @@ import { useRouter } from "expo-router";
 import { DefaultColors } from "@/constants/colors";
 import { ArrowLeft, Wallet, Building2, CheckCircle2 } from "lucide-react-native";
 import { formatMoney } from "@/utils/amount";
+import { userService } from "@/services/api/user.service";
+import { scheduleService } from "@/services/api/schedule.service";
+import { notifyWithdrawal } from "@/services/notifications";
 
 export default function WithdrawScreen() {
     const router = useRouter();
     const [amount, setAmount] = useState("");
     const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
     const [success, setSuccess] = useState(false);
     const [method, setMethod] = useState<'bank' | 'wallet'>('bank');
+    const [balance, setBalance] = useState(0);
+    const [totalPayout, setTotalPayout] = useState(0);
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        try {
+            setDataLoading(true);
+            const [balanceData, payoutsData] = await Promise.all([
+                userService.getBalance(),
+                scheduleService.getPayouts(),
+            ]);
+            setBalance(balanceData?.available ?? balanceData?.balance ?? 0);
+            const total = payoutsData.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+            setTotalPayout(total);
+        } catch (error) {
+            console.error("Failed to fetch withdraw data:", error);
+        } finally {
+            setDataLoading(false);
+        }
+    };
 
     const handleWithdraw = async () => {
         if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
             Alert.alert("Invalid Amount", "Please enter a valid withdrawal amount");
+            return;
+        }
+
+        if (Number(amount) > balance) {
+            Alert.alert("Insufficient Balance", "You don't have enough available balance for this withdrawal.");
             return;
         }
 
@@ -32,6 +64,10 @@ export default function WithdrawScreen() {
             // Simulate API call - Connect to real endpoint later
             await new Promise(resolve => setTimeout(resolve, 2000));
             setSuccess(true);
+
+            // Fire local notification
+            await notifyWithdrawal(Number(amount));
+
             setTimeout(() => {
                 router.back();
             }, 1500);
@@ -67,9 +103,20 @@ export default function WithdrawScreen() {
             </View>
 
             <View style={styles.content}>
-                <View style={styles.balanceCard}>
-                    <Text style={styles.balanceLabel}>Available Balance</Text>
-                    <Text style={styles.balanceAmount}>₦{formatMoney(150000)}</Text>
+                {/* Balance Cards */}
+                <View style={styles.balanceRow}>
+                    <View style={styles.balanceCard}>
+                        <Text style={styles.balanceLabel}>Available Balance</Text>
+                        <Text style={styles.balanceAmount}>
+                            {dataLoading ? "..." : `₦${formatMoney(balance)}`}
+                        </Text>
+                    </View>
+                    <View style={styles.balanceCard}>
+                        <Text style={styles.balanceLabel}>Total Payout</Text>
+                        <Text style={[styles.balanceAmount, { fontSize: 24, color: "#888" }]}>
+                            {dataLoading ? "..." : `₦${formatMoney(totalPayout)}`}
+                        </Text>
+                    </View>
                 </View>
 
                 <Text style={styles.label}>Withdrawal Method</Text>
@@ -148,21 +195,27 @@ const styles = StyleSheet.create({
     content: {
         padding: 20,
     },
+    balanceRow: {
+        flexDirection: "row",
+        gap: 12,
+        marginBottom: 32,
+    },
     balanceCard: {
+        flex: 1,
         backgroundColor: "#1a1a1a",
-        padding: 20,
+        padding: 16,
         borderRadius: 16,
         alignItems: "center",
-        marginBottom: 32,
     },
     balanceLabel: {
         color: "#888",
-        fontSize: 14,
+        fontSize: 12,
         marginBottom: 8,
+        fontWeight: "500",
     },
     balanceAmount: {
         color: DefaultColors.white,
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: "700",
     },
     label: {

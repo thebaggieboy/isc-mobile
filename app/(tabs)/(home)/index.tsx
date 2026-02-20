@@ -6,7 +6,7 @@ import Balance from "@/components/Balance";
 import UpcomingCard from "@/components/Upcomingcard";
 import ImpulseControl from "@/components/ImpulseControl";
 import { DefaultColors } from "@/constants/colors";
-import { userService, UserProfile, UserBalance, UserStats } from "@/services/api/user.service";
+import { userService, UserProfile, UserBalance } from "@/services/api/user.service";
 import { scheduleService } from "@/services/api/schedule.service";
 import { useFocusEffect } from "expo-router";
 import { useCallback } from "react";
@@ -21,7 +21,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [balance, setBalance] = useState<UserBalance | null>(null);
-  const [stats, setStats] = useState<UserStats | null>(null);
+
 
   useFocusEffect(
     useCallback(() => {
@@ -39,17 +39,16 @@ export default function Home() {
       setError(null);
 
       // Fetch all user data in parallel
-      const [userData, balanceData, statsData, schedulesData, payoutsData] = await Promise.all([
+      const [userData, balanceData, schedulesData, payoutsData] = await Promise.all([
         userService.getCurrentUser(),
         userService.getBalance(),
-        userService.getStats(),
         scheduleService.getSchedules(),
         scheduleService.getPayouts(),
       ]);
 
       setUser(userData);
       setBalance(balanceData);
-      setStats(statsData);
+
       setSchedules(schedulesData);
       setPayouts(payoutsData);
 
@@ -132,14 +131,49 @@ export default function Home() {
   const userName = user?.fullName?.split(' ')[0] || user?.email?.split('@')[0] || 'User';
   const userBalance = balance?.balance || 0;
 
-  // Filter out schedules where scheduledDate is today or in the past (completed)
+  // Filter schedules: show as upcoming until their date has passed
   const upcomingSchedules = schedules.filter((s) => {
+    if (s.status === 'completed') return false;
     const schedDate = new Date(s.scheduledDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     schedDate.setHours(0, 0, 0, 0);
-    return schedDate > today;
+    return schedDate >= today;
   });
+
+  // ── Calculate stats from schedules & payouts ──────────────
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  // Lock count: payouts with "locked" status
+  const lockCount = payouts.filter(p => p.status === 'locked').length;
+
+  // Total locked amount from payouts
+  const totalLocked = payouts
+    .filter(p => p.status === 'locked')
+    .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+
+  // Locked this month: payouts locked within the current calendar month
+  const lockedThisMonth = payouts
+    .filter((p: any) => {
+      const lockDate = new Date(p.lockDate);
+      return lockDate.getMonth() === currentMonth && lockDate.getFullYear() === currentYear;
+    })
+    .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+
+  // Active schedules: non-completed schedules
+  const activeSchedules = schedules.filter(s => s.status !== 'completed').length;
+
+  // Completed payouts
+  const completedPayouts = payouts.filter((p: any) => p.status === 'unlocked' || p.status === 'completed').length;
+
+  // Total balance (available + locked)
+  const totalBalance = userBalance + totalLocked;
+
+  // Streak: days since ccount creation (or days with active locks)
+  const accountCreated = user?.createdAt ? new Date(user.createdAt) : now;
+  const streakDays = Math.max(0, Math.floor((now.getTime() - accountCreated.getTime()) / (1000 * 60 * 60 * 24)));
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -159,10 +193,13 @@ export default function Home() {
           <Balance userName={userName} balance={userBalance} />
 
           <ImpulseControl
-            savedThisMonth={stats?.savedThisMonth || 0}
-            impulsesStopped={stats?.impulsesStopped || 0}
-            currentStreak={stats?.currentStreak || 0}
-            savingsGoal={stats?.savingsGoal || 0}
+            totalLocked={totalLocked}
+            lockedThisMonth={lockedThisMonth}
+            lockCount={lockCount}
+            activeSchedules={activeSchedules}
+            completedPayouts={completedPayouts}
+            totalBalance={totalBalance}
+            streakDays={streakDays}
           />
 
           <UpcomingCard

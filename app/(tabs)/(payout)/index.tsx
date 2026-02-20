@@ -4,23 +4,29 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet, ActivityIndicator } from "react-native";
 import { useState, useEffect } from "react";
 import { scheduleService } from "@/services/api/schedule.service";
+import { userService } from "@/services/api/user.service";
 
 export default function PayoutScreen() {
   const [payouts, setPayouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [balance, setBalance] = useState(0);
 
   useEffect(() => {
-    fetchPayouts();
+    fetchData();
   }, []);
 
-  const fetchPayouts = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const data = await scheduleService.getPayouts();
-      setPayouts(data);
+      const [payoutsData, balanceData] = await Promise.all([
+        scheduleService.getPayouts(),
+        userService.getBalance(),
+      ]);
+      setPayouts(payoutsData);
+      setBalance(balanceData?.balance || 0);
     } catch (error) {
-      console.error("Failed to fetch payouts:", error);
+      console.error("Failed to fetch payout data:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -29,23 +35,19 @@ export default function PayoutScreen() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchPayouts();
+    fetchData();
   };
 
-  // Calculate totals
-  const totalLocked = payouts
-    .filter(p => p.status === "locked")
-    .reduce((sum, p) => sum + p.amount, 0);
+  // Total of ALL payouts (not just locked)
+  const totalPayoutAmount = payouts.reduce((sum, p) => sum + (p.amount || 0), 0);
 
+  // Next upcoming payout (earliest locked one)
   const upcomingPayoutObj = payouts
     .filter(p => p.status === "locked")
     .sort((a, b) => new Date(a.unlockDate).getTime() - new Date(b.unlockDate).getTime())[0];
 
   const upcomingPayout = upcomingPayoutObj?.amount || 0;
-
-  const upcomingDate = upcomingPayoutObj
-    ? new Date(upcomingPayoutObj.unlockDate)
-    : null; // Changed from default date to null
+  const upcomingDate = upcomingPayoutObj ? new Date(upcomingPayoutObj.unlockDate) : null;
 
   if (loading && !refreshing) {
     return (
@@ -58,11 +60,11 @@ export default function PayoutScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <Payout
-        totalLocked={totalLocked}
+        totalLocked={totalPayoutAmount}
         upcomingPayout={upcomingPayout}
         payoutDate={upcomingDate}
         payouts={payouts}
-        userName="User" // TODO: Get from context or service
+        balance={balance}
         onRefresh={onRefresh}
         refreshing={refreshing}
       />

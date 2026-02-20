@@ -1,7 +1,19 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter, useNavigationContainerRef } from "expo-router";
 import { DefaultColors } from "@/constants/colors";
+import { useEffect } from "react";
 
 export default function PayoutLayout() {
+  const router = useRouter();
+  const navigationRef = useNavigationContainerRef();
+
+  // When the payout tab is focused, pop back to index if we're on a nested screen
+  useEffect(() => {
+    const unsubscribe = navigationRef?.addListener?.('state', () => {
+      // Navigation state changed — handled by Expo Router
+    });
+    return unsubscribe;
+  }, []);
+
   return (
     <Stack
       screenOptions={{
@@ -24,8 +36,7 @@ export default function PayoutLayout() {
       <Stack.Screen
         name="[id]"
         options={{
-          title: "Payout Details",
-          headerBackTitle: "Back",
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -37,5 +48,3 @@ export default function PayoutLayout() {
     </Stack>
   );
 }
-
-

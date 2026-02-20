@@ -1,41 +1,74 @@
-import { useRouter } from "expo-router";
+import { useEffect, useRef } from "react";
 import { DefaultColors } from "@/constants/colors";
 import {
   Shield,
   TrendingUp,
   Flame,
   Target,
+  Lock,
+  Calendar,
+  Wallet,
   Award
 } from "lucide-react-native";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity
+  TouchableOpacity,
+  Animated,
+  Easing
 } from "react-native";
 import { formatMoney } from "@/utils/amount";
 
 interface ImpulseControlProps {
-  savedThisMonth: number;
-  impulsesStopped: number;
-  currentStreak: number;
-  savingsGoal: number;
+  totalLocked: number;
+  lockedThisMonth: number;
+  lockCount: number;
+  activeSchedules: number;
+  completedPayouts: number;
+  totalBalance: number;
+  streakDays: number;
 }
 
 export default function ImpulseControl({
-  savedThisMonth,
-  impulsesStopped,
-  currentStreak,
-  savingsGoal
+  totalLocked,
+  lockedThisMonth,
+  lockCount,
+  activeSchedules,
+  completedPayouts,
+  totalBalance,
+  streakDays,
 }: ImpulseControlProps) {
-  const router = useRouter();
+  // Animation values
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const progressPercentage = savingsGoal > 0
-    ? Math.min((savedThisMonth / savingsGoal) * 100, 100)
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.exp),
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  // Progress: how much of total balance is locked (discipline score)
+  const disciplineScore = totalBalance > 0
+    ? Math.min((totalLocked / totalBalance) * 100, 100)
     : 0;
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, {
+      opacity: fadeAnim,
+      transform: [{ translateY: slideAnim }]
+    }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -43,18 +76,18 @@ export default function ImpulseControl({
             <Shield size={20} color="#ff4444" />
           </View>
           <View>
-            <Text style={styles.title}>Impulse Control</Text>
-            <Text style={styles.subtitle}>Stay on track with your goals</Text>
+            <Text style={styles.title}>Savings Overview</Text>
+            <Text style={styles.subtitle}>Your financial discipline at a glance</Text>
           </View>
         </View>
       </View>
 
-      {/* Savings Progress */}
+      {/* Locked Progress */}
       <View style={styles.progressSection}>
         <View style={styles.progressHeader}>
-          <Text style={styles.progressLabel}>Monthly Savings Goal</Text>
+          <Text style={styles.progressLabel}>Lock Discipline</Text>
           <Text style={styles.progressAmount}>
-            ₦{formatMoney(savedThisMonth)} / ₦{formatMoney(savingsGoal)}
+            ₦{formatMoney(totalLocked)} locked
           </Text>
         </View>
         <View style={styles.progressBarContainer}>
@@ -62,66 +95,87 @@ export default function ImpulseControl({
             <View
               style={[
                 styles.progressBarFill,
-                { width: `${progressPercentage}%` }
+                { width: `${disciplineScore}%` }
               ]}
             />
           </View>
           <Text style={styles.progressPercentage}>
-            {progressPercentage.toFixed(0)}%
+            {disciplineScore.toFixed(0)}%
           </Text>
         </View>
       </View>
 
-      {/* Stats Grid */}
+      {/* Top Stats Row */}
       <View style={styles.statsGrid}>
-        {/* Impulses Stopped */}
         <View style={styles.statCard}>
           <View style={styles.statIconContainer}>
-            <Target size={18} color="#ff4444" />
+            <Lock size={18} color="#ff4444" />
           </View>
-          <Text style={styles.statValue}>{impulsesStopped}</Text>
-          <Text style={styles.statLabel}>Impulses{'\n'}Stopped</Text>
+          <Text style={styles.statValue}>{lockCount}</Text>
+          <Text style={styles.statLabel}>Active{'\n'}Locks</Text>
         </View>
 
-        {/* Current Streak */}
-        <View style={styles.statCard}>
-          <View style={styles.statIconContainer}>
-            <Flame size={18} color="#ff4444" />
-          </View>
-          <Text style={styles.statValue}>{currentStreak}</Text>
-          <Text style={styles.statLabel}>Day{'\n'}Streak</Text>
-        </View>
-
-        {/* Money Saved */}
         <View style={styles.statCard}>
           <View style={styles.statIconContainer}>
             <TrendingUp size={18} color="#ff4444" />
           </View>
           <Text style={styles.statValue}>
-            ₦{formatMoney(savedThisMonth / 1000)}k
+            ₦{lockedThisMonth >= 1000 ? `${formatMoney(Math.round(lockedThisMonth / 1000))}k` : formatMoney(lockedThisMonth)}
           </Text>
-          <Text style={styles.statLabel}>This{'\n'}Month</Text>
+          <Text style={styles.statLabel}>Locked{'\n'}This Month</Text>
+        </View>
+
+        <View style={styles.statCard}>
+          <View style={styles.statIconContainer}>
+            <Calendar size={18} color="#ff4444" />
+          </View>
+          <Text style={styles.statValue}>{activeSchedules}</Text>
+          <Text style={styles.statLabel}>Active{'\n'}Schedules</Text>
+        </View>
+      </View>
+
+      {/* Bottom Stats Row */}
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <View style={[styles.statIconContainer, { backgroundColor: '#22C55E10' }]}>
+            <Wallet size={18} color="#22C55E" />
+          </View>
+          <Text style={styles.statValue}>{completedPayouts}</Text>
+          <Text style={styles.statLabel}>Completed{'\n'}Payouts</Text>
+        </View>
+
+        <View style={styles.statCard}>
+          <View style={[styles.statIconContainer, { backgroundColor: '#F59E0B10' }]}>
+            <Flame size={18} color="#F59E0B" />
+          </View>
+          <Text style={styles.statValue}>{streakDays}</Text>
+          <Text style={styles.statLabel}>Day{'\n'}Streak</Text>
         </View>
       </View>
 
       {/* Achievement Badge */}
-      {currentStreak >= 7 && (
-        <TouchableOpacity
-          style={styles.achievementBanner}
-          onPress={() => router.push("/achievements")}
-        >
-          <View style={styles.achievementLeft}>
-            <Award size={20} color="#ff4444" />
-            <View>
-              <Text style={styles.achievementTitle}>Week Warrior! 🎉</Text>
-              <Text style={styles.achievementText}>
-                You've stayed strong for {currentStreak} days
-              </Text>
+      {
+        lockCount >= 3 && (
+          <View style={styles.achievementBanner}>
+            <View style={styles.achievementLeft}>
+              <Award size={20} color="#ff4444" />
+              <View>
+                <Text style={styles.achievementTitle}>
+                  {lockCount >= 10 ? "🏆 Lock Master!" : lockCount >= 5 ? "🔥 Discipline Pro!" : "🎯 Getting Started!"}
+                </Text>
+                <Text style={styles.achievementText}>
+                  {lockCount >= 10
+                    ? `${lockCount} locks active — incredible discipline`
+                    : lockCount >= 5
+                      ? `${lockCount} locks active — you're on fire`
+                      : `${lockCount} locks active — keep going`}
+                </Text>
+              </View>
             </View>
           </View>
-        </TouchableOpacity>
-      )}
-    </View>
+        )
+      }
+    </Animated.View >
   );
 }
 
@@ -224,7 +278,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
     color: DefaultColors.white,
   },

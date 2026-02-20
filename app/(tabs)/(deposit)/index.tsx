@@ -20,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { usePaystack } from 'react-native-paystack-webview';
 import { userService, UserProfile } from "@/services/api/user.service";
 import { api } from "@/services/api";
+import { notifyDeposit } from "@/services/notifications";
 
 const QUICK_AMOUNTS = [1000, 5000, 10000, 20000];
 
@@ -89,8 +90,8 @@ export default function Deposit() {
         email: user.email,
         amount: numAmount,
         reference: reference,
-        activityIndicatorColor: DefaultColors.primary,
         onCancel: () => {
+          setLoading(false);
           Alert.alert("Cancelled", "Deposit was cancelled.");
         },
         onSuccess: (res: any) => handlePaystackSuccess(reference),
@@ -114,6 +115,9 @@ export default function Deposit() {
       await api.post('/transactions/verify', {
         reference: reference,
       });
+
+      // Fire local notification
+      await notifyDeposit(Number(amount));
 
       Alert.alert("Success", "Deposit successful! Your balance has been updated.", [
         { text: "OK", onPress: () => router.push("/(tabs)/(home)") }

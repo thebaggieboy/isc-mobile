@@ -3,6 +3,7 @@ import CreateWithdrawSchedule from "@/components/WithdrawSchedule";
 import { DefaultColors } from "@/constants/colors";
 import { scheduleService } from "@/services/api/schedule.service";
 import Toast from 'react-native-toast-message';
+import { notifyScheduleCreated } from '@/services/notifications';
 import { useRouter } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
 import { useState } from "react";
@@ -40,7 +41,7 @@ export default function Schedule() {
         amount: scheduleState.amount,
         payoutAmount: scheduleState.payoutAmount,
         scheduledDate: new Date(scheduleState.schedule.dtStart),
-        recurrence: mapFrequencyToString(scheduleState.schedule.freq)
+        recurrence: `${mapFrequencyToString(scheduleState.schedule.freq)};until=${new Date(scheduleState.schedule.until).toISOString()}`
       });
 
       Toast.show({
@@ -49,6 +50,12 @@ export default function Schedule() {
         text2: 'Your withdrawal schedule has been set successfully.',
         visibilityTime: 4000,
       });
+
+      // Fire local notification
+      await notifyScheduleCreated(
+        scheduleState.title || 'Withdrawal Schedule',
+        scheduleState.amount
+      );
 
       router.back();
     } catch (error) {

@@ -1,9 +1,11 @@
 // app/(tabs)/_layout.tsx
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { House, PiggyBank, Banknote, User } from "lucide-react-native";
 import { DefaultColors } from "@/constants/colors";
 
 export default function TabsLayout() {
+  const router = useRouter();
+
   return (
     <Tabs
       screenOptions={{
@@ -33,6 +35,11 @@ export default function TabsLayout() {
             <House color={color} size={size} />
           ),
         }}
+        listeners={{
+          tabPress: () => {
+            router.replace("/(tabs)/(home)");
+          },
+        }}
       />
       <Tabs.Screen
         name="(deposit)"
@@ -41,6 +48,11 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <PiggyBank color={color} size={size} />
           ),
+        }}
+        listeners={{
+          tabPress: () => {
+            router.replace("/(tabs)/(deposit)");
+          },
         }}
       />
       <Tabs.Screen
@@ -51,6 +63,11 @@ export default function TabsLayout() {
             <Banknote color={color} size={size} />
           ),
         }}
+        listeners={{
+          tabPress: () => {
+            router.replace("/(tabs)/(payout)");
+          },
+        }}
       />
       <Tabs.Screen
         name="(profile)"
@@ -59,6 +76,11 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <User color={color} size={size} />
           ),
+        }}
+        listeners={{
+          tabPress: () => {
+            router.replace("/(tabs)/(profile)");
+          },
         }}
       />
     </Tabs>

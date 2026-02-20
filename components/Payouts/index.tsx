@@ -30,7 +30,7 @@ interface PayoutProps {
   upcomingPayout: number;
   payoutDate: Date | null;
   payouts: PayoutItem[];
-  userName: string;
+  balance?: number;
   onRefresh?: () => void;
   refreshing?: boolean;
 }
@@ -40,14 +40,14 @@ export default function Payout({
   upcomingPayout,
   payoutDate,
   payouts,
-  userName,
+  balance = 0,
   onRefresh,
   refreshing = false
 }: PayoutProps) {
   const router = useRouter();
   const [showAmounts, setShowAmounts] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "locked" | "unlocked" | "pending">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "locked" | "unlocked" | "pending" | "completed">("all");
 
   const getDaysUntilPayout = () => {
     if (!payoutDate) return 0;
@@ -61,6 +61,7 @@ export default function Payout({
       case "locked":
         return <Lock size={16} color="#888" />;
       case "unlocked":
+      case "completed":
         return <CheckCircle size={16} color="#4CAF50" />;
       case "pending":
         return <Clock size={16} color="#FFC107" />;
@@ -69,18 +70,9 @@ export default function Payout({
     }
   };
 
-  const getTotalStats = () => {
-    const totalAmount = payouts.reduce((sum, p) => sum + p.amount, 0);
-    const count = payouts.length;
-    const lockedCount = payouts.filter(p => p.status === "locked").length;
-    return { totalAmount, count, lockedCount };
-  };
-
   const filteredPayouts = payouts
     .filter(p => filterStatus === "all" || p.status === filterStatus)
     .filter(p => searchQuery === "" || (p.title || p.interval).toLowerCase().includes(searchQuery.toLowerCase()));
-
-  const stats = getTotalStats();
 
   return (
     <ScrollView
@@ -120,12 +112,12 @@ export default function Payout({
           <View style={styles.summaryCard}>
             <View style={styles.cardHeader}>
               <Lock size={16} color="#888" />
-              <Text style={styles.cardLabel}>Total Amount</Text>
+              <Text style={styles.cardLabel}>Total Payout</Text>
             </View>
             <View style={styles.cardAmount}>
               <Text style={styles.currency}>₦</Text>
               <Text style={styles.amount}>
-                {showAmounts ? formatMoney(stats.totalAmount) : "****"}
+                {showAmounts ? formatMoney(totalLocked) : "****"}
               </Text>
             </View>
           </View>
@@ -177,7 +169,7 @@ export default function Payout({
 
         {/* Filter Chips */}
         <View style={styles.filterChips}>
-          {["all", "locked", "pending", "unlocked"].map((status) => (
+          {["all", "locked", "pending", "unlocked", "completed"].map((status) => (
             <TouchableOpacity
               key={status}
               style={[styles.filterChip, filterStatus === status && styles.filterChipActive]}
@@ -200,11 +192,11 @@ export default function Payout({
             <TouchableOpacity
               key={payout.id}
               style={styles.payoutCard}
-              onPress={() => router.push(`/(payout)/${payout.id}`)}
+              onPress={() => router.push(`/(tabs)/(payout)/${payout.id}`)}
               activeOpacity={0.7}
             >
               <View style={styles.payoutCardLeft}>
-                <View style={[styles.iconContainer, { backgroundColor: payout.status === 'unlocked' ? '#4CAF5020' : '#222' }]}>
+                <View style={[styles.iconContainer, { backgroundColor: payout.status === 'unlocked' || payout.status === 'completed' ? '#4CAF5020' : '#222' }]}>
                   {getStatusIcon(payout.status)}
                 </View>
                 <View style={styles.payoutInfo}>
@@ -213,22 +205,24 @@ export default function Payout({
                   <Text style={styles.payoutDate}>
                     {payout.status === "locked"
                       ? `Unlocks ${new Date(payout.unlockDate).toLocaleDateString()}`
-                      : `Unlocked ${new Date(payout.unlockDate).toLocaleDateString()}`
+                      : payout.status === "completed"
+                        ? `Completed ${new Date(payout.unlockDate).toLocaleDateString()}`
+                        : `Unlocked ${new Date(payout.unlockDate).toLocaleDateString()}`
                     }
                   </Text>
                 </View>
               </View>
 
               <View style={styles.payoutCardRight}>
-                <Text style={[styles.payoutAmount, { color: payout.status === 'unlocked' ? '#4CAF50' : DefaultColors.white }]}>
+                <Text style={[styles.payoutAmount, { color: payout.status === 'unlocked' || payout.status === 'completed' ? '#4CAF50' : DefaultColors.white }]}>
                   {showAmounts ? `₦${formatMoney(payout.amount)}` : "****"}
                 </Text>
                 <View style={[styles.statusBadge, {
-                  backgroundColor: payout.status === 'unlocked' ? '#4CAF5020' :
+                  backgroundColor: payout.status === 'unlocked' || payout.status === 'completed' ? '#4CAF5020' :
                     payout.status === 'pending' ? '#FFC10720' : '#333'
                 }]}>
                   <Text style={[styles.statusText, {
-                    color: payout.status === 'unlocked' ? '#4CAF50' :
+                    color: payout.status === 'unlocked' || payout.status === 'completed' ? '#4CAF50' :
                       payout.status === 'pending' ? '#FFC107' : '#888'
                   }]}>
                     {payout.status.charAt(0).toUpperCase() + payout.status.slice(1)}

@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import Button from "../Button";
 import { styles } from "./styles";
 import { DefaultColors } from "@/constants/colors";
-import { CalendarClock, Eye, EyeOff, Plus } from "lucide-react-native";
+import { CalendarClock, Eye, EyeOff, Plus, Bell } from "lucide-react-native";
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { formatMoney } from "@/utils/amount";
@@ -30,16 +30,24 @@ export default function Balance({ balance, userName }: BalanceProps) {
           </Text>
           <Text style={styles.label}>Total Balance</Text>
         </View>
-        <TouchableOpacity
-          onPress={() => setShowBalance(!showBalance)}
-          style={styles.eyeButton}
-        >
-          {showBalance ? (
-            <Eye color={DefaultColors.white} size={20} />
-          ) : (
-            <EyeOff color={DefaultColors.white} size={20} />
-          )}
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <TouchableOpacity
+            onPress={() => router.push("/(tabs)/(profile)/notifications")}
+            style={styles.eyeButton}
+          >
+            <Bell color={DefaultColors.white} size={20} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setShowBalance(!showBalance)}
+            style={styles.eyeButton}
+          >
+            {showBalance ? (
+              <Eye color={DefaultColors.white} size={20} />
+            ) : (
+              <EyeOff color={DefaultColors.white} size={20} />
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.amountContainer}>

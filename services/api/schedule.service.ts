@@ -20,7 +20,7 @@ export interface PayoutItem {
     amount: number;
     lockDate: string;
     unlockDate: string;
-    status: "locked" | "unlocked" | "pending";
+    status: "locked" | "unlocked" | "pending" | "completed";
     interval: string;
     recurrence: string;
     title: string;
@@ -73,15 +73,25 @@ export const scheduleService = {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to fetch schedules');
+                const errorText = await response.text();
+                console.error('Get schedules response error:', response.status, errorText);
+                throw new Error('Failed to fetch schedules');
             }
 
             const result = await response.json();
-            return result.data.schedules;
+
+            // Handle different response formats defensively
+            const schedules = result?.data?.schedules || result?.data || result?.schedules || result;
+
+            if (Array.isArray(schedules)) {
+                return schedules;
+            }
+
+            console.warn('Unexpected schedules response shape:', typeof schedules);
+            return [];
         } catch (error) {
             console.error('Get schedules error:', error);
-            throw error;
+            return []; // Return empty array instead of throwing
         }
     },
 
@@ -98,15 +108,26 @@ export const scheduleService = {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to fetch payouts');
+                const errorText = await response.text();
+                console.error('Get payouts response error:', response.status, errorText);
+                throw new Error('Failed to fetch payouts');
             }
 
             const result = await response.json();
-            return result.data.payouts;
+            console.log('Payouts API response:', JSON.stringify(result).slice(0, 200));
+
+            // Handle different response formats defensively
+            const payouts = result?.data?.payouts || result?.data || result?.payouts || result;
+
+            if (Array.isArray(payouts)) {
+                return payouts;
+            }
+
+            console.warn('Unexpected payouts response shape:', typeof payouts);
+            return [];
         } catch (error) {
             console.error('Get payouts error:', error);
-            throw error;
+            return []; // Return empty array instead of throwing to prevent crashes
         }
     },
 

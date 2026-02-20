@@ -25,15 +25,13 @@ interface UpcomingCardProps {
 export default function UpcomingCard({ schedules, payouts }: UpcomingCardProps) {
   const router = useRouter();
 
-  const getRelativeDate = (dateString: string | Date) => {
+  const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
-    const today = new Date();
-    const diff = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diff === 0) return "Today";
-    if (diff === 1) return "Tomorrow";
-    if (diff < 7 && diff > 0) return `${diff} days`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   };
 
   return (
@@ -69,15 +67,15 @@ export default function UpcomingCard({ schedules, payouts }: UpcomingCardProps) 
                   <View style={styles.itemInfo}>
                     <Text style={styles.itemTitle}>{schedule.title}</Text>
                     <Text style={styles.itemDate}>
-                      Payout: ₦{formatMoney(schedule.payoutAmount)}
+                      Locked: ₦{formatMoney(schedule.amount)}
                     </Text>
                     <Text style={styles.itemDate}>
-                      Due: {getRelativeDate(schedule.scheduledDate)}
+                      End Date: {formatDate(schedule.scheduledDate)}
                     </Text>
                   </View>
                 </View>
                 <Text style={styles.itemAmount}>
-                  ₦{formatMoney(schedule.payoutAmount)}
+                  ₦{formatMoney(schedule.amount)}
                 </Text>
               </TouchableOpacity>
             ))
@@ -122,9 +120,12 @@ export default function UpcomingCard({ schedules, payouts }: UpcomingCardProps) 
                     <Lock size={16} color="#888" />
                   </View>
                   <View style={styles.itemInfo}>
-                    <Text style={styles.itemTitle}>{payout.interval}</Text>
+                    <Text style={styles.itemTitle}>{payout.title || payout.interval}</Text>
                     <Text style={styles.itemDate}>
-                      {getRelativeDate(payout.unlockDate)}
+                      Payout: ₦{formatMoney(payout.amount)}
+                    </Text>
+                    <Text style={styles.itemDate}>
+                      Unlock Date: {formatDate(payout.unlockDate)}
                     </Text>
                   </View>
                 </View>
